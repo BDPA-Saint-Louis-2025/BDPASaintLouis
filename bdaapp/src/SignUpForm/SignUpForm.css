@@ -1,0 +1,84 @@
+/* Center everything on the page */
+.page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+/* Welcome Header */
+.header1 {
+  text-align: center;
+  margin-bottom: 15px;
+  font-size: 75px;
+}
+
+/* Two-column layout */
+.signup-container {
+  display: flex;
+  gap: 40px;
+  max-width: 900px;
+  width: 100%;
+  justify-content: center;
+
+  /* 🔲 Add border back */
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 40px;
+  background-color: #f9f9f9; /* optional light background for contrast */
+}
+
+/* Left column with two buttons */
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+}
+
+/* Right column with form */
+.right-column {
+  flex: 1;
+}
+
+.inputs {
+  margin-bottom: 15px;
+}
+
+.input {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid black;
+  font-size: 18px;
+}
+
+/* Optional: style buttons */
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.or-separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 25px;
+  padding: 0 10px;
+  color: #666;
+}
+
+.link-option {
+  font-size: 30px;
+  color: #0c10f1;
+  text-decoration: none;
+  margin: 10px 0;
+  cursor: pointer;
+}
+
+.link-option:hover {
+  text-decoration: underline;
+}
