@@ -22,11 +22,10 @@
   width: 100%;
   justify-content: center;
 
-  /* 🔲 Add border back */
   border: 1px solid #ccc;
   border-radius: 10px;
   padding: 40px;
-  background-color: #f9f9f9; /* optional light background for contrast */
+  background-color: #f9f9f9;
 }
 
 /* Left column with two buttons */
@@ -53,6 +52,20 @@
   padding: 10px;
   border: 2px solid black;
   font-size: 18px;
+  transition: border-color 0.4s ease;
+}
+
+/* Password input color changes based on strength */
+.input.weak {
+  border-color: #d8000c;
+}
+
+.input.medium {
+  border-color: #ff8c00;
+}
+
+.input.strong {
+  border-color: #28a745;
 }
 
 /* Optional: style buttons */
@@ -61,6 +74,7 @@ button {
   font-size: 16px;
   cursor: pointer;
 }
+
 .or-separator {
   display: flex;
   align-items: center;
@@ -81,4 +95,34 @@ button {
 
 .link-option:hover {
   text-decoration: underline;
+}
+
+/* Password strength bar */
+.strength-bar {
+  margin-top: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background-color: transparent;
+  width: 100%;
+  transition: width 0.4s ease, background-color 0.4s ease;
+}
+
+.strength-bar.weak {
+  width: 33%;
+  background-color: #d8000c;
+}
+
+.strength-bar.medium {
+  width: 66%;
+  background-color: #ff8c00;
+}
+
+.strength-bar.strong {
+  width: 100%;
+  background-color: #28a745;
+}
+
+/* Hide strength text */
+.strength-text {
+  display: none;
 }
