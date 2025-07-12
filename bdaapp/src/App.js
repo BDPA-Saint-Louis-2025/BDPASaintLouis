@@ -1,16 +1,36 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
 import LoginScreen from './LoginScreen/LoginScreen';
 import SignUpForm from './SignUpForm/SignUpForm';
 import Dashboard from './Dashboard/Dashboard';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-function App() {
-  return ( // Need to have return so your able to see what you have created when you run the app
-      <BrowserRouter>
-      <Routes>
-        <Route path='/Dashboard' element ={<Dashboard/>}/>
-        <Route index element = {<LoginScreen />}/>
+import ExplorerView from './Explorer/ExplorerView';
+import EditorView from './Editor/EditorView';
+import RecoverPassword from './RecoverPasswrod/RecoverPassword';
+import ResetPassword from './ResetPassword/ResetPassword';
 
+const getToken = () => {
+  return localStorage.getItem('token') || sessionStorage.getItem('token');
+};
+
+const PrivateRoute = ({ children }) => {
+  return getToken() ? children : <Navigate to="/login" />;
+};
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/login" element={<LoginScreen />} />
+        <Route path="/signup" element={<SignUpForm />} />
+        <Route path="/recover" element={<RecoverPassword />} />
+        <Route path="/reset/:token" element={<ResetPassword />} />
+        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/explorer" element={<PrivateRoute><ExplorerView /></PrivateRoute>} />
+        <Route path="/editor/:fileId" element={<PrivateRoute><EditorView /></PrivateRoute>} />
+        <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
-      </BrowserRouter>
+    </Router>
   );
 }
 
