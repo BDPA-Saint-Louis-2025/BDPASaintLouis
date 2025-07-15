@@ -1,21 +1,40 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
 import LoginScreen from './LoginScreen/LoginScreen';
 import SignUpForm from './SignUpForm/SignUpForm';
 import Dashboard from './Dashboard/Dashboard';
+import ExplorerView from './Explorer/ExplorerView';
+import EditorView from './Editor/EditorView';
+import RecoverPassword from './RecoverPasswrod/RecoverPassword';
+import ResetPassword from './ResetPassword/ResetPassword';
+
+const getToken = () => {
+  return localStorage.getItem('token') || sessionStorage.getItem('token');
+};
+
+const PrivateRoute = ({ children }) => {
+  return getToken() ? children : <Navigate to="/login" />;
+};
+
 import Navbar from './Navbar/Navbar Authed'; 
 //For now, you'll have to change this between Navbar Guests vs Navbar Authed for the view you want 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
-  return ( // Need to have return so your able to see what you have created when you run the app
-      <BrowserRouter>
-      <Navbar/>
+  return (
+    <Router>
       <Routes>
-        <Route path='/Dashboard' element ={<Dashboard/>}/>
-        <Route path='/SignUpForm' element ={<SignUpForm/>}/>
-        <Route index element = {<LoginScreen />}/>
-
+        <Route path="/login" element={<LoginScreen />} />
+        <Route path="/signup" element={<SignUpForm />} />
+        <Route path="/recover" element={<RecoverPassword />} />
+        <Route path="/reset/:token" element={<ResetPassword />} />
+        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/explorer" element={<PrivateRoute><ExplorerView /></PrivateRoute>} />
+        <Route path="/editor/:fileId" element={<PrivateRoute><EditorView /></PrivateRoute>} />
+        <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
-      </BrowserRouter>
+    </Router>
   );
 }
 

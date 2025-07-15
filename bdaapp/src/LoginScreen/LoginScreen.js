@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './LoginScreen.css';
 
 function LoginScreen() {
@@ -6,6 +7,7 @@ function LoginScreen() {
   const [password, setPassword] = useState('');
   const [isChecked, setIsChecked] = useState(false);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleOnChange = () => setIsChecked(!isChecked);
 
@@ -21,9 +23,16 @@ function LoginScreen() {
       if (!res.ok) {
         setError(data.message || "Invalid login");
       } else {
-        localStorage.setItem("token", data.token);
+        const storage = isChecked ? localStorage : sessionStorage;
+        storage.setItem("token", data.token);
+        storage.setItem("username", data.user.username);
+
         alert(`Welcome back, ${data.user.username}!`);
+        navigate("/explorer");
+        console.log('Saved token:', data.token);
+
       }
+
     } catch (err) {
       setError("Network error");
     }
@@ -33,8 +42,20 @@ function LoginScreen() {
     <div className='container'>
       <h1 className='header'>Welcome Back!</h1>
       <div className='inputs'>
-        <input className='input' type='email' placeholder='Email' value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input className='input' type='password' placeholder='Password' value={password} onChange={(e) => setPassword(e.target.value)} />
+        <input
+          className='input'
+          type='email'
+          placeholder='Email'
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          className='input'
+          type='password'
+          placeholder='Password'
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
       </div>
       <div className='rememberMe'>
         <input type='checkbox' checked={isChecked} onChange={handleOnChange} /> Remember me
