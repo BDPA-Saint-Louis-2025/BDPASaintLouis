@@ -8,7 +8,7 @@ import ExplorerView from './Explorer/ExplorerView';
 import EditorView from './Editor/EditorView';
 import RecoverPassword from './RecoverPasswrod/RecoverPassword';
 import ResetPassword from './ResetPassword/ResetPassword';
-
+import ForgotPasswordForm from './ForgotPassword/ForgotPasswordForm';
 const getToken = () => {
   return localStorage.getItem('token') || sessionStorage.getItem('token');
 };
@@ -29,6 +29,7 @@ function App() {
         <Route path="/explorer" element={<PrivateRoute><ExplorerView /></PrivateRoute>} />
         <Route path="/editor/:fileId" element={<PrivateRoute><EditorView /></PrivateRoute>} />
         <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/forgot-password" element={<ForgotPasswordForm />} />
       </Routes>
     </Router>
   );

@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 const FileOrFolder = require('../models/FileOrFolder');
 const authMiddleware = require("../middleware/authMiddleware");
 
-// ✅ GET /api/files/myfiles – Root level files for user
+// GET /api/files/myfiles – Root level files for user
 router.get('/myfiles', authMiddleware, async (req, res) => {
   try {
     const files = await FileOrFolder.find({ owner: req.user.id, parent: null });
@@ -15,6 +15,7 @@ router.get('/myfiles', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/files/search – Search by name or tags
 router.get('/search', authMiddleware, async (req, res) => {
   const query = req.query.query;
   if (!query) return res.status(400).json({ message: 'Missing search query' });
@@ -33,26 +34,54 @@ router.get('/search', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/files – Root files with sorting + pagination
 router.get('/', authMiddleware, async (req, res) => {
+  const {
+    sort = 'name',
+    order = 'asc',
+    parent = null,
+    page = 1,
+    limit = 10
+  } = req.query;
+
+  const sortOption = {};
+  sortOption[sort] = order === 'asc' ? 1 : -1;
+
+  const query = { owner: req.user.id, parent };
+
   try {
-    const files = await FileOrFolder.find({ owner: req.user.id, parent: null });
-    res.json(files);
+    const total = await FileOrFolder.countDocuments(query);
+    const files = await FileOrFolder.find(query)
+      .sort(sortOption)
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit));
+
+    res.json({ files, total });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// ✅ GET /api/files/folder/:id – Files within a folder
+
+// GET /api/files/folder/:id – Files within a folder (with sorting)
 router.get('/folder/:id', authMiddleware, async (req, res) => {
+  const { sort = 'name', order = 'asc' } = req.query;
+  const sortOption = {};
+  sortOption[sort] = order === 'asc' ? 1 : -1;
+
   try {
-    const contents = await FileOrFolder.find({ owner: req.user.id, parent: req.params.id });
+    const contents = await FileOrFolder.find({
+      owner: req.user.id,
+      parent: req.params.id
+    }).sort(sortOption);
+    
     res.json(contents);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// ✅ GET /api/files/:id – Retrieve a single file (used for editor)
+// GET /api/files/:id – Retrieve a single file (for editor)
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
     const file = await FileOrFolder.findById(req.params.id);
@@ -64,7 +93,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// ✅ POST /api/files/create – Create file or folder
+// POST /api/files/create – Create file or folder
 router.post('/create', authMiddleware, async (req, res) => {
   const { name, type, content = '', tags = [], parent = null } = req.body;
 
@@ -88,7 +117,7 @@ router.post('/create', authMiddleware, async (req, res) => {
   }
 });
 
-// ✅ PUT /api/files/:id – Update file content
+// PUT /api/files/:id – Update file content
 router.put('/:id', authMiddleware, async (req, res) => {
   const { content } = req.body;
   try {
@@ -131,7 +160,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// PATCH /api/files/:id/lock
+// PATCH /api/files/:id/lock – Lock a file for editing
 router.patch('/:id/lock', authMiddleware, async (req, res) => {
   const { client } = req.body;
   const username = req.user.username;

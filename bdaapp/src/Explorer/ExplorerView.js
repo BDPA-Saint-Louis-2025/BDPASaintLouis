@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
+
 
 function ExplorerView() {
   const [files, setFiles] = useState([]);
@@ -10,31 +12,46 @@ function ExplorerView() {
   const [editingFile, setEditingFile] = useState(null);
   const [editName, setEditName] = useState('');
   const [editTags, setEditTags] = useState('');
+  const [sort, setSort] = useState('name');
+  const [order, setOrder] = useState('asc');
+  const [folderItemCounts, setFolderItemCounts] = useState({});
+  const [tagFilter, setTagFilter] = useState('');
+  const [availableTags, setAvailableTags] = useState([]);
+  const [total, setTotal] = useState(0);
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const decoded = token ? jwtDecode(token) : {};
+  const reqUser = decoded.username;
   const currentFolderId = folderStack[folderStack.length - 1].id;
+const fetchFiles = async (folderId = null) => {
+  const url = folderId
+    ? `http://localhost:5000/api/files/folder/${folderId}?sort=${sort}&order=${order}`
+    : `http://localhost:5000/api/files?sort=${sort}&order=${order}`;
 
-  const fetchFiles = async (folderId = null) => {
-    const url = folderId
-      ? `http://localhost:5000/api/files/folder/${folderId}`
-      : 'http://localhost:5000/api/files';
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
 
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await res.json();
-    if (Array.isArray(data)) {
-      setFiles(data);
-    } else {
-      setFiles([]);
-      console.error('Expected array but got:', data);
-    }
-  };
+  const data = await res.json();
+
+  if (data && Array.isArray(data.files)) {
+    setFiles(data.files);
+    setTotal(data.total || data.files.length); // optional but useful for pagination
+    fetchFolderItemCounts(data.files);
+
+    const allTags = new Set();
+    data.files.forEach(f => f.tags?.forEach(tag => allTags.add(tag)));
+    setAvailableTags([...allTags].sort());
+  } else {
+    setFiles([]);
+    console.error('Expected files array but got:', data);
+  }
+};
 
   useEffect(() => {
     fetchFiles(currentFolderId);
-  }, [currentFolderId]);
+  }, [currentFolderId, sort, order]);
 
   const handleCreate = async () => {
     if (!newFileName.trim()) return;
@@ -58,6 +75,20 @@ function ExplorerView() {
     }
   };
 
+  const fetchFolderItemCounts = async (fileList) => {
+    const newCounts = {};
+    for (const file of fileList) {
+      if (file.type === 'folder') {
+        const res = await fetch(`http://localhost:5000/api/files/folder/${file._id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        newCounts[file._id] = Array.isArray(data) ? data.length : 0;
+      }
+    }
+    setFolderItemCounts(newCounts);
+  };
+
   const handleDrill = (file) => {
     if (file.type === 'folder') {
       setFolderStack([...folderStack, { id: file._id, name: file.name }]);
@@ -69,17 +100,21 @@ function ExplorerView() {
     setFolderStack(newStack);
   };
 
-  const handleSearch = async () => {
-    const res = await fetch(`http://localhost:5000/api/files/search?query=${searchTerm}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await res.json();
-    if (Array.isArray(data)) {
-      setFiles(data);
-    } else {
-      setFiles([]);
-    }
-  };
+const handleSearch = async () => {
+  const res = await fetch(`http://localhost:5000/api/files/search?query=${searchTerm}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const data = await res.json();
+
+  if (data && Array.isArray(data.files)) {
+    setFiles(data.files);
+    const allTags = new Set();
+    data.files.forEach(f => f.tags?.forEach(tag => allTags.add(tag)));
+    setAvailableTags([...allTags].sort());
+  } else {
+    setFiles([]);
+  }
+};
 
   const openEditor = (file) => {
     if (file.type === 'file') {
@@ -141,6 +176,22 @@ function ExplorerView() {
         <button onClick={handleSearch}>Search</button>
       </div>
 
+      {/* Sort */}
+      <div style={{ margin: '10px 0' }}>
+        <label>Sort by: </label>
+        <select value={sort} onChange={(e) => setSort(e.target.value)}>
+          <option value="name">Name</option>
+          <option value="createdAt">Date Created</option>
+          <option value="size">Size</option>
+        </select>
+
+        <label style={{ marginLeft: 10 }}>Order: </label>
+        <select value={order} onChange={(e) => setOrder(e.target.value)}>
+          <option value="asc">Ascending</option>
+          <option value="desc">Descending</option>
+        </select>
+      </div>
+
       {/* Breadcrumb */}
       <div style={{ margin: '10px 0' }}>
         {folderStack.map((f, i) => (
@@ -168,30 +219,82 @@ function ExplorerView() {
         <button onClick={handleCreate}>Create</button>
       </div>
 
+{/* Tag Filter */}
+<div style={{ margin: '10px 0' }}>
+  <label>Filter by Tag: </label>
+  <select
+    value={tagFilter}
+    onChange={(e) => setTagFilter(e.target.value)}
+  >
+    <option value="">All</option>
+    {availableTags.map((tag, index) => (
+      <option key={index} value={tag}>{tag}</option>
+    ))}
+  </select>
+</div>
+
       {/* File list */}
       <ul>
-        {files.map((file) => (
-          <li key={file._id}>
-            <span
-              onClick={() => openEditor(file)}
-              style={{ cursor: 'pointer', marginRight: 10 }}
-            >
-              {file.name} ({file.type})
-            </span>
-            {editingFile === file._id ? (
-              <>
-                <input value={editName} onChange={(e) => setEditName(e.target.value)} />
-                <input value={editTags} onChange={(e) => setEditTags(e.target.value)} />
-                <button onClick={saveMetadata}>Save</button>
-              </>
-            ) : (
-              <>
-                <button onClick={() => startEditMetadata(file)}>Edit Metadata</button>
-                <button onClick={() => handleDelete(file._id)}>Delete</button>
-              </>
-            )}
-          </li>
-        ))}
+        {files
+  .filter(file => tagFilter === '' || (file.tags && file.tags.includes(tagFilter)))
+  .map((file) => {
+          const isLockedByAnother = file.lock?.user && file.lock.user !== reqUser;
+
+          return (
+            <li key={file._id}>
+              <span
+                onClick={() => openEditor(file)}
+                style={{ cursor: 'pointer', marginRight: 10 }}
+              >
+                {file.name} ({file.type})
+                {file.lock?.user && (
+                  <span style={{ color: 'red', marginLeft: 5 }}>
+                    Locked by {file.lock.user} ({file.lock.client})
+                  </span>
+                )}
+              </span>
+
+              {file.tags && file.tags.length > 0 && (
+                <div style={{ fontSize: '0.85em', color: '#555', marginLeft: 15 }}>
+                  Tags: {file.tags.join(', ')}
+                </div>
+              )}
+
+              <small style={{ marginLeft: 8, color: '#666' }}>
+                {file.type === 'file'
+                  ? `${(file.size / 1024).toFixed(1)} KB`
+                  : `${folderItemCounts[file._id] ?? '?'} items`}
+                {' | '}
+                {new Date(file.modifiedAt).toLocaleString()}
+              </small>
+
+              {editingFile === file._id ? (
+                <>
+                  <input value={editName} onChange={(e) => setEditName(e.target.value)} />
+                  <input value={editTags} onChange={(e) => setEditTags(e.target.value)} />
+                  <button onClick={saveMetadata}>Save</button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => startEditMetadata(file)}
+                    disabled={isLockedByAnother}
+                    style={{ opacity: isLockedByAnother ? 0.5 : 1 }}
+                  >
+                    Edit Metadata
+                  </button>
+                  <button
+                    onClick={() => handleDelete(file._id)}
+                    disabled={isLockedByAnother}
+                    style={{ opacity: isLockedByAnother ? 0.5 : 1 }}
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

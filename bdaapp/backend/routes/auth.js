@@ -53,6 +53,15 @@ router.get('/me', authMiddleware, async (req, res) => {
   res.json({ username: user.username, email: user.email });
 });
 
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ error: 'Email not found' });
+
+  // Generate token and send email logic here (skipped for now)
+  res.json({ message: 'Reset link sent if email exists' });
+});
+
 // Update email
 router.patch('/email', authMiddleware, async (req, res) => {
   const { email } = req.body;
