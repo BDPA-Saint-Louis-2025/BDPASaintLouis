@@ -8,6 +8,8 @@ import ExplorerView from './Explorer/ExplorerView';
 import EditorView from './Editor/EditorView';
 import RecoverPassword from './RecoverPasswrod/RecoverPassword';
 import ResetPassword from './ResetPassword/ResetPassword';
+import Navbar from './Navbar/Navbar Guest'; 
+//For now, you'll have to change this between Navbar Guests vs Navbar Authed for the view you want 
 
 const getToken = () => {
   return localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -17,13 +19,10 @@ const PrivateRoute = ({ children }) => {
   return getToken() ? children : <Navigate to="/login" />;
 };
 
-import Navbar from './Navbar/Navbar Authed'; 
-//For now, you'll have to change this between Navbar Guests vs Navbar Authed for the view you want 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-
 function App() {
   return (
     <Router>
+      <Navbar/>
       <Routes>
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/signup" element={<SignUpForm />} />
