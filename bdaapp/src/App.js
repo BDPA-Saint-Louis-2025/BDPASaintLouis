@@ -30,6 +30,9 @@ function App() {
         <Route path="/editor/:fileId" element={<PrivateRoute><EditorView /></PrivateRoute>} />
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/forgot-password" element={<ForgotPasswordForm />} />
+        <Route path="/recover" element={<RecoverPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+
       </Routes>
     </Router>
   );

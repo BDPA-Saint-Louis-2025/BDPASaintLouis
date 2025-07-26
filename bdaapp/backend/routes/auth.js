@@ -117,5 +117,80 @@ router.post('/reset/:token', async (req, res) => {
 });
 
 
+
+router.post('/recover', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) return res.status(400).json({ message: 'Email is required' });
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(200).json({ message: 'If a matching account exists, a reset link will be sent.' });
+
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expires = Date.now() + 1000 * 60 * 10; // 10 minutes
+
+    user.resetToken = resetToken;
+    user.resetTokenExpires = expires;
+    await user.save();
+    console.log(`[DEBUG] Password reset link: http://localhost:3000/reset-password/${resetToken}`);
+
+    return res.json({ message: 'Recovery link generated (check console)' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+router.get('/reset-password/:token', async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpires: { $gt: Date.now() } 
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired reset token' });
+    }
+
+    res.json({ message: 'Valid token' }); 
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+router.post('/reset-password/:token', async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  if (!password) return res.status(400).json({ message: 'New password is required' });
+
+  try {
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired reset token' });
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+    user.password = hashed;
+    user.resetToken = undefined;
+    user.resetTokenExpires = undefined;
+    await user.save();
+
+    res.json({ message: 'Password successfully reset' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
 

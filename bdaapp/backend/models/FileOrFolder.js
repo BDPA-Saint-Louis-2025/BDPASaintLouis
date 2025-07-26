@@ -9,11 +9,24 @@ const fileOrFolderSchema = new mongoose.Schema({
   owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   size: { type: Number, default: 0 },
   modifiedAt: { type: Date, default: Date.now },
-  lock: {
-    user: { type: String, default: null },
-    client: { type: String, default: null },
-    createdAt: { type: Date, default: null }
-  }
+  uploadPath: { type: String }, 
+lock: {
+  user: { type: String, default: null },    // username of the locker
+  client: { type: String, default: null },  // client ID of the locker
+  uploadPath: { type: String },
+  createdAt: { type: Date, default: null }
+},
+  permissions: {
+  type: Map,
+  of: String,
+  default: {}
+},
+symlinkTarget: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: 'FileOrFolder',
+  default: null
+}
 });
+
 
 module.exports = mongoose.model("FileOrFolder", fileOrFolderSchema);
