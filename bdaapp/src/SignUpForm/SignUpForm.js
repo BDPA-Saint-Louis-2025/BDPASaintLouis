@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './SignUpForm.css';
+import { useNavigate, Link} from 'react-router-dom';
 
 const SignUpForm = () => {
   const [username, setUsername] = useState('');
@@ -56,6 +57,7 @@ const SignUpForm = () => {
               <input className="input" type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
             </div>
             <br />
+            <Link to="/login" className="loginLink">Already have an account? Log in</Link>
             <button type="submit">Submit</button>
             {error && <p style={{ color: "red" }}>{error}</p>}
             {success && <p style={{ color: "green" }}>{success}</p>}
