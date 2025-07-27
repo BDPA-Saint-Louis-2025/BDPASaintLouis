@@ -18,6 +18,8 @@ function ExplorerView() {
   const [availableTags, setAvailableTags] = useState([]);
   const [total, setTotal] = useState(0);
   const [showShared, setShowShared] = useState(false);
+  const [editIsPublic, setEditIsPublic] = useState(false);
+
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -189,30 +191,34 @@ const fetchFiles = async (folderId = null, shared = false) => {
     }
   };
 
-  const startEditMetadata = (file) => {
-    setEditingFile(file._id);
-    setEditName(file.name);
-    setEditTags(file.tags ? file.tags.join(', ') : '');
-  };
+const startEditMetadata = (file) => {
+  setEditingFile(file._id);
+  setEditName(file.name);
+  setEditTags(file.tags ? file.tags.join(', ') : '');
+  setEditIsPublic(file.isPublic || false); 
+};
 
   const saveMetadata = async () => {
-    const res = await fetch(`http://localhost:5000/api/files/${editingFile}/metadata`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        name: editName,
-        tags: editTags.split(',').map(tag => tag.trim())
-      })
-    });
+  const res = await fetch(`http://localhost:5000/api/files/${editingFile}/metadata`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      name: editName,
+      tags: editTags.split(',').map(tag => tag.trim()),
+      isPublic: editIsPublic,                  // ✅ ADD THIS LINE
+      clientId: decoded.clientId               // if using clientId for locking
+    })
+  });
 
-    if (res.ok) {
-      setEditingFile(null);
-      fetchFiles(currentFolderId);
-    }
-  };
+  if (res.ok) {
+    setEditingFile(null);
+    fetchFiles(currentFolderId);
+  }
+};
+
 
   const handleDelete = async (fileId) => {
     if (!window.confirm('Are you sure you want to delete this item?')) return;
@@ -335,11 +341,21 @@ const fetchFiles = async (folderId = null, shared = false) => {
                 </small>
 
                 {editingFile === file._id ? (
-                  <>
-                    <input value={editName} onChange={(e) => setEditName(e.target.value)} />
-                    <input value={editTags} onChange={(e) => setEditTags(e.target.value)} />
-                    <button onClick={saveMetadata}>Save</button>
-                  </>
+                 <>
+    <input value={editName} onChange={(e) => setEditName(e.target.value)} />
+    <input value={editTags} onChange={(e) => setEditTags(e.target.value)} />
+
+    <label style={{ display: 'block', marginTop: 5 }}>
+      <input
+        type="checkbox"
+        checked={editIsPublic}
+        onChange={(e) => setEditIsPublic(e.target.checked)}
+      />
+      {' '}Publicly visible
+    </label>
+
+    <button onClick={saveMetadata}>Save</button>
+  </>
                 ) : (
                   <>
                     <button

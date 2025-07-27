@@ -10,6 +10,7 @@ const fileOrFolderSchema = new mongoose.Schema({
   size: { type: Number, default: 0 },
   modifiedAt: { type: Date, default: Date.now },
   uploadPath: { type: String }, 
+  isPublic: { type: Boolean, default: false },
 lock: {
   user: { type: String, default: null },    // username of the locker
   client: { type: String, default: null },  // client ID of the locker

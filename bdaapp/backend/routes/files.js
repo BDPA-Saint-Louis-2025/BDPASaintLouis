@@ -188,36 +188,40 @@ router.get('/search', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
-// PATCH /api/files/:id/metadata
 router.patch('/:id/metadata', authMiddleware, async (req, res) => {
-  const { name, tags } = req.body;
+  const { name, tags, isPublic, clientId } = req.body;
 
   try {
-    const isLocker =
-  file.lock?.user === req.user.username &&
-  file.lock?.client === clientId;
-    const file = await FileOrFolder.findById(req.params.id);
+    const file = await FileOrFolder.findById(req.params.id); 
 
-    if (file.lock?.user && !isLocker) {
-  return res.status(423).json({ error: "File is locked by another user/client" });
-}
     if (!file || file.owner.toString() !== req.user.id) {
       return res.status(404).json({ message: 'File not found or access denied' });
     }
 
+    const isLocker =
+      file.lock?.user === req.user.username &&
+      file.lock?.client === clientId;
+
+    if (file.lock?.user && !isLocker) {
+      return res.status(423).json({ error: "File is locked by another user/client" });
+    }
+
     if (name) file.name = name;
     if (Array.isArray(tags)) file.tags = tags.slice(0, 5);
-    file.modifiedAt = Date.now();
+    if (typeof isPublic === 'boolean') file.isPublic = isPublic;
 
+    file.modifiedAt = Date.now();
     await file.save();
+
     res.json({ message: 'Metadata updated successfully' });
 
   } catch (err) {
-    console.error(err);
+    console.error('[ERROR] PATCH /metadata:', err);
     res.status(500).json({ message: 'Metadata update failed' });
   }
 });
+
+
 
 // GET /api/files
 router.get('/', authMiddleware, async (req, res) => {
@@ -251,6 +255,16 @@ router.get('/', authMiddleware, async (req, res) => {
     res.json({ files, total });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.get('/public', async (req, res) => {
+  try {
+    const publicFiles = await FileOrFolder.find({ isPublic: true });
+    res.json({ files: publicFiles });
+  } catch (err) {
+    console.error('[GET /public] Error:', err);
+    res.status(500).json({ message: 'Failed to fetch public files' });
   }
 });
 
