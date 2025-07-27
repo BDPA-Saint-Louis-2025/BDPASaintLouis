@@ -1,98 +1,93 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useMemo } from 'react';
 import { jwtDecode } from 'jwt-decode';
+
+import FolderIcon from '@mui/icons-material/Folder';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import UploadIcon from '@mui/icons-material/Upload';
+import HomeIcon from '@mui/icons-material/Home';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+
+import './ExplorerView.css';
 
 function ExplorerView() {
   const [files, setFiles] = useState([]);
-  const [folderStack, setFolderStack] = useState([{ id: null, name: 'Home' }]);
-  const [newFileName, setNewFileName] = useState('');
-  const [newFileType, setNewFileType] = useState('file');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [editingFile, setEditingFile] = useState(null);
-  const [editName, setEditName] = useState('');
-  const [editTags, setEditTags] = useState('');
-  const [sort, setSort] = useState('name');
-  const [order, setOrder] = useState('asc');
+  const [folders, setFolders] = useState([]);
   const [folderItemCounts, setFolderItemCounts] = useState({});
-  const [tagFilter, setTagFilter] = useState('');
-  const [availableTags, setAvailableTags] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [showShared, setShowShared] = useState(false);
-  const navigate = useNavigate();
+  const [currentFolderId, setCurrentFolderId] = useState(null);
+  const [currentFolderName, setCurrentFolderName] = useState('My Drive');
+
+  const [activeSection, setActiveSection] = useState('home');
+  const [showNewMenu, setShowNewMenu] = useState(false);
+  const [newFileType, setNewFileType] = useState('file');
+  const fileInputRef = React.useRef(null);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  const [filterType, setFilterType] = useState('all'); // all | file | folder
+  const [sortOrder, setSortOrder] = useState('asc');   // asc | desc
 
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   const decoded = token ? jwtDecode(token) : {};
-  const reqUser = decoded.username;
-  const currentFolderId = folderStack[folderStack.length - 1].id;
 
-const fetchFiles = async (folderId = null, shared = false) => {
-  const url = shared
-    ? `http://localhost:5000/api/files/shared`
-    : folderId
-      ? `http://localhost:5000/api/files/folder/${folderId}?sort=${sort}&order=${order}`
-      : `http://localhost:5000/api/files?sort=${sort}&order=${order}`;
-
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-
-  const data = await res.json();
-  if (data && Array.isArray(data.files)) {
-    setFiles(data.files);
-    setTotal(data.total || data.files.length);
-    fetchFolderItemCounts(data.files);
-    const allTags = new Set();
-    data.files.forEach(f => f.tags?.forEach(tag => allTags.add(tag)));
-    setAvailableTags([...allTags].sort());
-  } else {
-    setFiles([]);
-  }
-};
-
-
+  // Debounced search
   useEffect(() => {
-    fetchFiles(currentFolderId);
-  }, [currentFolderId, sort, order]);
+    const handler = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
 
-  const handleCreate = async () => {
-    if (!newFileName.trim()) return;
+  const fetchFiles = async (folderId = null, section = activeSection) => {
+    let url = `http://localhost:5000/api/files`;
+    if (section === 'shared') url = `http://localhost:5000/api/files/shared`;
+    if (section === 'recent') url = `http://localhost:5000/api/files/recent`;
+    if (folderId) url = `http://localhost:5000/api/files/folder/${folderId}`;
 
-    const res = await fetch('http://localhost:5000/api/files/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        name: newFileName,
-        type: newFileType,
-        parent: currentFolderId || null
-      })
-    });
-
-    if (res.ok) {
-      setNewFileName('');
-      fetchFiles(currentFolderId);
+    try {
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (data && Array.isArray(data.files)) {
+        const folderList = data.files.filter((f) => f.type === 'folder');
+        setFiles(data.files.filter((f) => f.type === 'file'));
+        setFolders(folderList);
+        setCurrentFolderName(data.folderName || (folderId ? 'Folder' : 'My Drive'));
+        await fetchFolderItemCounts(folderList);
+      } else {
+        setFiles([]);
+        setFolders([]);
+      }
+    } catch (e) {
+      console.error(e);
+      setFiles([]);
+      setFolders([]);
     }
   };
 
-  const previewFile = async (fileId, fileName) => {
-  try {
-    const res = await fetch(`http://localhost:5000/api/files/${fileId}/preview`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+  const fetchFolderItemCounts = async (folderList) => {
+    const counts = {};
+    for (const folder of folderList) {
+      try {
+        const res = await fetch(`http://localhost:5000/api/files/folder/${folder._id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const folderData = await res.json();
+        counts[folder._id] = folderData.files ? folderData.files.length : 0;
+      } catch {
+        counts[folder._id] = 0;
+      }
+    }
+    setFolderItemCounts(counts);
+  };
 
-    if (!res.ok) throw new Error('Preview failed');
-    const data = await res.json();
-
-    alert(`Preview of ${fileName}:\n\n${data.content}`);
-   
-  } catch (err) {
-    console.error(err);
-    alert('Preview error');
-  }
-};
-
+  useEffect(() => {
+    fetchFiles(currentFolderId, activeSection);
+  }, [activeSection, currentFolderId]);
 
   const handleFileUpload = async (file) => {
     if (!file) return;
@@ -108,275 +103,250 @@ const fetchFiles = async (folderId = null, shared = false) => {
       });
 
       if (res.ok) {
-        alert('Upload successful!');
-        fetchFiles(currentFolderId);
+        await fetchFiles(currentFolderId, activeSection);
       } else {
         alert('Upload failed');
       }
     } catch (err) {
       console.error(err);
-      alert('An error occurred while uploading.');
+      alert('Upload error');
     }
   };
 
-  const handleFileDownload = async (fileId, fileName) => {
+  const handleDelete = async (itemId) => {
+    if (!window.confirm('Are you sure you want to delete this item?')) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/files/${fileId}/download`, {
+      const res = await fetch(`http://localhost:5000/api/files/${itemId}`, {
+        method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
-
-      if (!res.ok) throw new Error('Download failed');
-
-      const blob = await res.blob();
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      if (res.ok) fetchFiles(currentFolderId, activeSection);
     } catch (err) {
       console.error(err);
-      alert('Download error');
+      alert('Delete error');
     }
   };
 
-  const fetchFolderItemCounts = async (fileList) => {
-    const newCounts = {};
-    for (const file of fileList) {
-      if (file.type === 'folder') {
-        const res = await fetch(`http://localhost:5000/api/files/folder/${file._id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await res.json();
-        newCounts[file._id] = Array.isArray(data) ? data.length : 0;
-      }
-    }
-    setFolderItemCounts(newCounts);
-  };
-
-  const handleDrill = (file) => {
-    if (file.type === 'folder') {
-      setFolderStack([...folderStack, { id: file._id, name: file.name }]);
+  const previewFile = async (file) => {
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/files/${file._id}/preview`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) throw new Error('Preview failed');
+      const data = await res.json();
+      alert(`Preview of ${file.name}:\n\n${data.content}`);
+    } catch (err) {
+      console.error(err);
+      alert('Preview error');
     }
   };
 
-  const handleBackTo = (index) => {
-    const newStack = folderStack.slice(0, index + 1);
-    setFolderStack(newStack);
-  };
-
-  const handleSearch = async () => {
-    const res = await fetch(`http://localhost:5000/api/files/search?query=${searchTerm}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await res.json();
-
-    if (data && Array.isArray(data.files)) {
-      setFiles(data.files);
-      const allTags = new Set();
-      data.files.forEach(f => f.tags?.forEach(tag => allTags.add(tag)));
-      setAvailableTags([...allTags].sort());
+  // Apply filters & sorting
+  const displayedFolders = useMemo(() => {
+    let list = folders;
+    if (filterType !== 'file') {
+      list = list.filter((folder) =>
+        folder.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+      );
     } else {
-      setFiles([]);
+      return [];
     }
-  };
 
-  const openEditor = (file) => {
-    if (file.type === 'file') {
-      navigate(`/editor/${file._id}`);
+    list.sort((a, b) => sortOrder === 'asc'
+      ? a.name.localeCompare(b.name)
+      : b.name.localeCompare(a.name)
+    );
+
+    return list;
+  }, [folders, debouncedSearchTerm, filterType, sortOrder]);
+
+  const displayedFiles = useMemo(() => {
+    let list = files;
+    if (filterType !== 'folder') {
+      list = list.filter((file) =>
+        file.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+      );
     } else {
-      handleDrill(file);
+      return [];
     }
-  };
 
-  const startEditMetadata = (file) => {
-    setEditingFile(file._id);
-    setEditName(file.name);
-    setEditTags(file.tags ? file.tags.join(', ') : '');
-  };
+    list.sort((a, b) => sortOrder === 'asc'
+      ? a.name.localeCompare(b.name)
+      : b.name.localeCompare(a.name)
+    );
 
-  const saveMetadata = async () => {
-    const res = await fetch(`http://localhost:5000/api/files/${editingFile}/metadata`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        name: editName,
-        tags: editTags.split(',').map(tag => tag.trim())
-      })
-    });
+    return list;
+  }, [files, debouncedSearchTerm, filterType, sortOrder]);
 
-    if (res.ok) {
-      setEditingFile(null);
-      fetchFiles(currentFolderId);
-    }
-  };
-
-  const handleDelete = async (fileId) => {
-    if (!window.confirm('Are you sure you want to delete this item?')) return;
-
-    const res = await fetch(`http://localhost:5000/api/files/${fileId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    if (res.ok) {
-      fetchFiles(currentFolderId);
-    }
+  const clearSearch = () => {
+    setSearchTerm('');
+    setDebouncedSearchTerm('');
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Explorer</h2>
+    <div className="drive-layout">
+      {/* SIDEBAR */}
+      <aside className="sidebar">
+        <button className="new-btn" onClick={() => setShowNewMenu((v) => !v)}>
+          New
+        </button>
 
-<button onClick={() => {
-  const newShowShared = !showShared;
-  setShowShared(newShowShared);
-  fetchFiles(null, newShowShared);
-}}>
-  {showShared ? "Back to My Files" : "View Shared Files"}
-</button>
+        {showNewMenu && (
+          <div className="new-menu">
+            <div className="new-menu-item">
+              <button onClick={() => { setShowNewMenu(false); }}>New File</button>
+            </div>
+            <div className="new-menu-item">
+              <button onClick={() => { setShowNewMenu(false); }}>New Folder</button>
+            </div>
+            <div className="new-menu-item">
+              <button onClick={() => { fileInputRef.current?.click(); setShowNewMenu(false); }}>
+                <UploadIcon /> Upload File
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                style={{ display: 'none' }}
+                onChange={(e) => handleFileUpload(e.target.files[0])}
+              />
+            </div>
+          </div>
+        )}
 
-      <div>
-        <input
-          placeholder="Search files..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <button onClick={handleSearch}>Search</button>
-      </div>
+        <nav className="nav">
+          <button className={activeSection === 'home' ? 'active' : ''} onClick={() => { setCurrentFolderId(null); setActiveSection('home'); }}>
+            <HomeIcon /> My Drive
+          </button>
+          <button className={activeSection === 'recent' ? 'active' : ''} onClick={() => { setCurrentFolderId(null); setActiveSection('recent'); }}>
+            <AccessTimeIcon /> Recent
+          </button>
+          <button className={activeSection === 'shared' ? 'active' : ''} onClick={() => { setCurrentFolderId(null); setActiveSection('shared'); }}>
+            <PeopleAltIcon /> Shared with me
+          </button>
+        </nav>
 
-      <div style={{ margin: '10px 0' }}>
-        <label>Sort by: </label>
-        <select value={sort} onChange={(e) => setSort(e.target.value)}>
-          <option value="name">Name</option>
-          <option value="createdAt">Date Created</option>
-          <option value="size">Size</option>
-        </select>
-        <label style={{ marginLeft: 10 }}>Order: </label>
-        <select value={order} onChange={(e) => setOrder(e.target.value)}>
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
-        </select>
-      </div>
+        {/* Filter Section */}
+        <div className="filter-section">
+          <h4>Filter By:</h4>
+          <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+            <option value="all">All</option>
+            <option value="file">Files</option>
+            <option value="folder">Folders</option>
+          </select>
 
-      <div style={{ margin: '10px 0' }}>
-        {folderStack.map((f, i) => (
-          <span
-            key={i}
-            onClick={() => handleBackTo(i)}
-            style={{ cursor: 'pointer', textDecoration: 'underline', marginRight: 5 }}
-          >
-            {f.name} {i < folderStack.length - 1 ? '>' : ''}
-          </span>
-        ))}
-      </div>
+          <h4>Sort By Name:</h4>
+          <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
+            <option value="asc">Ascending (A-Z)</option>
+            <option value="desc">Descending (Z-A)</option>
+          </select>
+        </div>
 
-      <div>
-        <input
-          placeholder="New name"
-          value={newFileName}
-          onChange={(e) => setNewFileName(e.target.value)}
-        />
-        <select value={newFileType} onChange={(e) => setNewFileType(e.target.value)}>
-          <option value="file">File</option>
-          <option value="folder">Folder</option>
-        </select>
-        <button onClick={handleCreate}>Create</button>
-      </div>
+        {/* Dashboard Link at bottom */}
+        <div className="sidebar-footer">
+          <button onClick={() => window.location.href = '/dashboard'}>
+            <DashboardIcon /> Dashboard
+          </button>
+        </div>
+      </aside>
 
-      <div style={{ marginTop: '10px' }}>
-        <input type="file" onChange={(e) => handleFileUpload(e.target.files[0])} />
-      </div>
+      {/* MAIN CONTENT */}
+      <main className="content">
+        <div className="breadcrumb">
+          {currentFolderId && (
+            <button className="back-btn" onClick={() => setCurrentFolderId(null)}>
+              <ArrowBackIcon /> Back
+            </button>
+          )}
+          <h2>{currentFolderName}</h2>
+        </div>
 
-      <div style={{ margin: '10px 0' }}>
-        <label>Filter by Tag: </label>
-        <select value={tagFilter} onChange={(e) => setTagFilter(e.target.value)}>
-          <option value="">All</option>
-          {availableTags.map((tag, index) => (
-            <option key={index} value={tag}>{tag}</option>
-          ))}
-        </select>
-      </div>
+        {/* SEARCH */}
+        <div className="search-bar">
+          <SearchIcon style={{ color: '#5f4b8b' }} />
+          <input
+            placeholder="Search files and folders..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {searchTerm && (
+            <button className="clear-search-btn" onClick={clearSearch}>
+              <ClearIcon />
+            </button>
+          )}
+        </div>
 
-      <ul>
-        {files
-          .filter(file => tagFilter === '' || (file.tags && file.tags.includes(tagFilter)))
-          .map(file => {
-            const isLockedByAnother = file.lock?.user && file.lock.user !== reqUser;
-            return (
-              <li key={file._id}>
-                <span
-                  onClick={() => openEditor(file)}
-                  style={{ cursor: 'pointer', marginRight: 10 }}
-                >
-                  {file.name} ({file.type})
-                  {file.lock?.user && (
-                    <span style={{ color: 'red', marginLeft: 5 }}>
-                      Locked by {file.lock.user} ({file.lock.client})
-                    </span>
-                  )}
-                </span>
-
-                {file.tags?.length > 0 && (
-                  <div style={{ fontSize: '0.85em', color: '#555', marginLeft: 15 }}>
-                    Tags: {file.tags.join(', ')}
+        {/* FOLDERS */}
+        {filterType !== 'file' && (
+          <>
+            <h3 className="section-title">Folders</h3>
+            <div className="folder-row">
+              {displayedFolders.length > 0 ? (
+                displayedFolders.map((folder) => (
+                  <div
+                    key={folder._id}
+                    className="folder-card fade-in"
+                    onDoubleClick={() => setCurrentFolderId(folder._id)}
+                  >
+                    <div className="left">
+                      <FolderIcon style={{ fontSize: 28, color: '#c084fc' }} />
+                      <div className="folder-name">{folder.name}</div>
+                    </div>
+                    <div className="right">
+                      <div className="file-actions">
+                        <span className="item-count">{folderItemCounts[folder._id] || 0} items</span>
+                        <button onClick={() => setCurrentFolderId(folder._id)} title="View">
+                          <VisibilityIcon />
+                        </button>
+                        <button onClick={() => handleDelete(folder._id)} title="Delete">
+                          <DeleteIcon />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                )}
+                ))
+              ) : (
+                <div className="placeholder-space">No matching folders.</div>
+              )}
+            </div>
+          </>
+        )}
 
-                <small style={{ marginLeft: 8, color: '#666' }}>
-                  {file.type === 'file'
-                    ? `${(file.size / 1024).toFixed(1)} KB`
-                    : `${folderItemCounts[file._id] ?? '?'} items`}
-                  {' | '}
-                  {new Date(file.modifiedAt).toLocaleString()}
-                </small>
-
-                {editingFile === file._id ? (
-                  <>
-                    <input value={editName} onChange={(e) => setEditName(e.target.value)} />
-                    <input value={editTags} onChange={(e) => setEditTags(e.target.value)} />
-                    <button onClick={saveMetadata}>Save</button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => startEditMetadata(file)}
-                      disabled={isLockedByAnother}
-                      style={{ opacity: isLockedByAnother ? 0.5 : 1 }}
-                    >
-                      Edit Metadata
-                    </button>
-                    <button
-                      onClick={() => handleDelete(file._id)}
-                      disabled={isLockedByAnother}
-                      style={{ opacity: isLockedByAnother ? 0.5 : 1 }}
-                    >
-                      Delete
-                    </button>
-                    {file.type === 'file' && (
-                      <button onClick={() => handleFileDownload(file._id, file.name)}>
-                        Download
-                      </button>
-
-                      
-                    )}
-
-                    {file.type === 'file' && (
-  <>
-    <button onClick={() => handleFileDownload(file._id, file.name)}>Download</button>
-    <button onClick={() => previewFile(file._id, file.name)}>Preview</button>
-  </>
-)}
-
-                  </>
-                )}
-              </li>
-            );
-          })}
-      </ul>
+        {/* FILES */}
+        {filterType !== 'folder' && (
+          <>
+            <h3 className="section-title">Files</h3>
+            <div className="folder-row">
+              {displayedFiles.length > 0 ? (
+                displayedFiles.map((file) => (
+                  <div
+                    key={file._id}
+                    className="folder-card fade-in"
+                    onDoubleClick={() => previewFile(file)}
+                  >
+                    <div className="left">
+                      <InsertDriveFileIcon style={{ fontSize: 28, color: '#9b5de5' }} />
+                      <div className="folder-name">{file.name}</div>
+                    </div>
+                    <div className="right">
+                      <div className="file-actions">
+                        <button onClick={() => previewFile(file)} title="View">
+                          <VisibilityIcon />
+                        </button>
+                        <button onClick={() => handleDelete(file._id)} title="Delete">
+                          <DeleteIcon />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="placeholder-space">No matching files.</div>
+              )}
+            </div>
+          </>
+        )}
+      </main>
     </div>
   );
 }

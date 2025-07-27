@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link} from 'react-router-dom';
 import './LoginScreen.css';
 
 function LoginScreen() {
@@ -57,6 +57,7 @@ function LoginScreen() {
           onChange={(e) => setPassword(e.target.value)}
         />
       </div>
+      <Link to="/signup" className='signupLink'>Don't have an account? Sign up</Link>
       <div className='rememberMe'>
         <input type='checkbox' checked={isChecked} onChange={handleOnChange} /> Remember me
       </div>

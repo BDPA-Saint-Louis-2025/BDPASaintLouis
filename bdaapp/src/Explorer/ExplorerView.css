@@ -1,0 +1,345 @@
+/* ------------------------- LAYOUT ------------------------- */
+.drive-layout {
+  display: flex;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+  background: #faf5ff; /* Soft lavender background */
+}
+
+/* ------------------------- SIDEBAR ------------------------- */
+.sidebar {
+  width: 240px;
+  background: #ffffff;
+  border-right: 1px solid #e0d7ff;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Space for footer */
+}
+
+/* New button */
+.new-btn {
+  background: #9b5de5;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background 0.3s ease;
+}
+
+.new-btn:hover {
+  background: #7a42d1;
+}
+
+/* Navigation (My Drive, Recent, Shared) */
+.nav button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 10px 0;
+  cursor: pointer;
+  font-size: 14px;
+  color: #5f4b8b;
+  transition: color 0.2s ease;
+}
+
+.nav button:hover {
+  color: #9b5de5;
+}
+
+.nav .active {
+  color: #9b5de5;
+  font-weight: bold;
+}
+
+/* Footer (Dashboard button) */
+.sidebar-footer {
+  border-top: 1px solid #e0d7ff;
+  padding-top: 10px;
+}
+
+.sidebar-footer button {
+  background: none;
+  border: none;
+  color: #5f4b8b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.sidebar-footer button:hover {
+  color: #9b5de5;
+}
+
+/* ------------------------- MAIN CONTENT ------------------------- */
+.content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: #fdfaff;
+}
+
+/* ------------------------- SEARCH BAR ------------------------- */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #d3bfff;
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 20px;
+  background: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.search-bar input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 14px;
+  color: #5f4b8b;
+}
+
+.clear-search-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9b5de5;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s ease;
+}
+
+.clear-search-btn:hover {
+  color: #7a42d1;
+}
+
+/* ------------------------- SECTION TITLES ------------------------- */
+.section-title {
+  font-weight: bold;
+  color: #5f4b8b;
+  margin: 15px 0 8px;
+  font-size: 16px;
+}
+
+/* ------------------------- FOLDER/FILE ROW ------------------------- */
+.folder-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.folder-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e0d7ff;
+  border-radius: 6px;
+  padding: 10px;
+  transition: background 0.2s ease, transform 0.1s ease;
+  cursor: pointer;
+}
+
+.folder-card:hover {
+  background: #f3e8ff;
+  transform: translateY(-1px);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.folder-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4b3869;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.item-count {
+  font-size: 13px;
+  color: #5f4b8b;
+  font-weight: 500;
+}
+
+.file-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #5f4b8b;
+  transition: color 0.2s ease;
+}
+
+.file-actions button:hover {
+  color: #9b5de5;
+}
+
+/* ------------------------- PLACEHOLDER ------------------------- */
+.placeholder-space {
+  text-align: center;
+  padding: 20px;
+  color: #8d77a5;
+  font-size: 14px;
+  font-style: italic;
+  min-height: 50px;
+}
+
+/* ------------------------- MODALS ------------------------- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  min-width: 320px;
+  max-width: 400px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.modal-content input,
+.modal-content select,
+.modal-content textarea {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #d3bfff;
+  border-radius: 4px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modal-actions button {
+  padding: 8px 12px;
+  background: #9b5de5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.modal-actions button:hover {
+  background: #7a42d1;
+}
+
+/* ------------------------- ANIMATIONS ------------------------- */
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 0.4s forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* Filter section in sidebar */
+.filter-section {
+  margin-top: 20px;
+  padding: 10px;
+  border-top: 1px solid #e0d7ff;
+}
+
+.filter-section h4 {
+  font-size: 14px;
+  color: #5f4b8b;
+  margin-bottom: 5px;
+}
+
+.filter-section select {
+  width: 100%;
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid #d3bfff;
+  font-size: 14px;
+  color: #5f4b8b;
+}
+
+/* Back button styling */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: #9b5de5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  margin-bottom: 10px;
+}
+
+.back-btn:hover {
+  background: #7a42d1;
+}
+
+.filter-section {
+  margin-top: 20px;
+  padding: 10px;
+  border-top: 1px solid #e0d7ff;
+}
+
+.filter-section h4 {
+  font-size: 14px;
+  color: #5f4b8b;
+  margin-bottom: 5px;
+}
+
+.filter-section select {
+  width: 100%;
+  padding: 6px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  border: 1px solid #d3bfff;
+  font-size: 14px;
+  color: #5f4b8b;
+}
+
