@@ -4,9 +4,36 @@ const mongoose = require("mongoose");
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const User = require('../models/User'); 
+const crypto = require('crypto');
+const { v4: uuidv4 } = require('uuid');
+
+
+
 
 const FileOrFolder = require('../models/FileOrFolder');
 const authMiddleware = require("../middleware/authMiddleware");
+
+
+
+// File Upload
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    
+    const uploadPath = path.join(__dirname, '../uploads');
+   
+   
+    if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath);
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `${Date.now()}-${file.originalname}`;
+    cb(null, uniqueName);
+  }
+});
+
+
+const upload = multer({ storage });
 
 // Helper to check if user has permission
 const hasPermission = (file, user) => {
@@ -48,11 +75,15 @@ router.delete("/:id", authMiddleware, async (req, res) => {
 
     const isOwner = node.owner.equals(req.user._id);
     const canUnshare = node.permissions?.[req.user.username];
-
+const canEdit = node.permissions?.[req.user.username] === 'edit';
     // Can't delete others' stuff
     if (!isOwner && !canUnshare) {
       return res.status(403).json({ error: "Not authorized" });
     }
+    
+if (!isOwner && !canEdit) {
+  return res.status(403).json({ error: "Not authorized" });
+}
 
     // Recycle Bin itself is protected
     if (node.name === "Recycle Bin" && node.parent === null) {
@@ -167,6 +198,46 @@ router.delete("/users/:username", async (req, res) => {
 
 
 
+router.post('/:id/generate-link', authMiddleware, async (req, res) => {
+  try {
+    const file = await FileOrFolder.findById(req.params.id);
+    if (!file) return res.status(404).json({ error: 'File not found' });
+
+    const isOwner = file.owner.toString() === req.user._id.toString();
+    if (!isOwner) return res.status(403).json({ error: 'Only the owner can generate links' });
+
+    // Generate a unique token if one doesn't exist
+    if (!file.publicLinkId) {
+      file.publicLinkId = crypto.randomBytes(16).toString('hex');
+      await file.save();
+    }
+
+    const shareableUrl = `http://localhost:5000/api/files/public/${file.publicLinkId}`;
+    res.json({ link: shareableUrl });
+  } catch (err) {
+    console.error('[LINK ERROR]', err);
+    res.status(500).json({ error: 'Failed to generate link' });
+  }
+});
+
+
+router.get('/public/:id', async (req, res) => {
+  try {
+    const file = await FileOrFolder.findOne({ publicLinkId: req.params.id });
+
+    if (!file || !file.isPublic) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const filePath = path.join(__dirname, '../uploads', file.uploadPath);
+    return res.sendFile(filePath);
+  } catch (err) {
+    console.error('[PUBLIC LINK ERROR]', err);
+    return res.status(500).json({ error: 'Failed to access file' });
+  }
+});
+
+
 // GET /api/files/search
 router.get('/search', authMiddleware, async (req, res) => {
   const { query } = req.query;
@@ -275,11 +346,6 @@ router.get('/folder/:id', authMiddleware, async (req, res) => {
   sortOption[sort] = order === 'asc' ? 1 : -1;
 
   try {
-    const parentFolder = await FileOrFolder.findById(req.params.id);
-    if (!parentFolder || !hasPermission(parentFolder, req.user)) {
-      return res.status(403).json({ message: 'Access denied to folder' });
-    }
-
     const contents = await FileOrFolder.find({
       parent: req.params.id,
       $or: [
@@ -308,18 +374,23 @@ router.get('/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// POST /api/files/create
+// POST /api/files/createconst path = require('path');
+
 router.post('/create', authMiddleware, async (req, res) => {
   const { name, type, content = '', tags = [], parent = null } = req.body;
 
-  if (!name || !type) return res.status(400).json({ message: 'Missing required fields' });
+  if (!name || !type) {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
+
+  console.log('[CREATE]', { name, type, parent, user: req.user.username });
 
   try {
     const newNode = new FileOrFolder({
       name,
       type,
       owner: req.user.id,
-      parent,
+      parent: parent || null,
       content: type === 'file' ? content : undefined,
       tags: type === 'file' ? tags.slice(0, 5) : [],
       size: type === 'file' ? Buffer.byteLength(content, 'utf8') : 0,
@@ -328,9 +399,11 @@ router.post('/create', authMiddleware, async (req, res) => {
     await newNode.save();
     res.status(201).json(newNode);
   } catch (err) {
+    console.error('[CREATE ERROR]', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 // PUT /api/files/:id
 router.put('/:id', authMiddleware, async (req, res) => {
@@ -354,25 +427,142 @@ router.put('/:id', authMiddleware, async (req, res) => {
 });
 
 // DELETE /api/files/:id
-router.delete('/:id', authMiddleware, async (req, res) => {
-  const fileId = req.params.id;
+router.delete("/:id", authMiddleware, async (req, res) => {
+  console.log('[DELETE ENTRY] HIT route with ID:', req.params.id);
 
   try {
-    const file = await FileOrFolder.findById(fileId);
-    if (!file || file.owner.toString() !== req.user.id) {
-      return res.status(403).json({ message: 'Access denied' });
+    const node = await FileOrFolder.findById(req.params.id);
+    if (!node) return res.status(404).json({ error: "Node not found" });
+
+    const fileOwner = node.owner?.toString();
+    const reqUserId = req.user.id; // ✅ correct field
+
+    console.log('[DELETE DEBUG]', {
+      fileId: node._id,
+      fileOwner,
+      reqUserId,
+      match: fileOwner === reqUserId
+    });
+
+    if (fileOwner !== reqUserId) {
+      return res.status(403).json({ error: "Not authorized" });
     }
 
-    const deleteRecursively = async (id) => {
-      const children = await FileOrFolder.find({ parent: id });
-      for (const child of children) await deleteRecursively(child._id);
-      await FileOrFolder.findByIdAndDelete(id);
-    };
-
-    await deleteRecursively(fileId);
-    res.json({ message: 'Deleted successfully' });
+    await node.deleteOne();
+    res.json({ message: "Deleted" });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('[DELETE ERROR]', err);
+    res.status(500).json({ error: "Delete failed" });
+  }
+});
+
+// PATCH /api/files/:id - Edit file content, tags, or name
+router.patch('/:id', authMiddleware, async (req, res) => {
+  const { content, tags, name } = req.body;
+
+  try {
+    const file = await FileOrFolder.findById(req.params.id);
+    if (!file || file.type !== 'file') {
+      return res.status(404).json({ error: 'File not found or not editable' });
+    }
+
+    // Only the owner can edit
+    if (file.owner.toString() !== req.user.id) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Apply updates
+    if (content !== undefined) {
+      file.content = content;
+      file.size = Buffer.byteLength(content, 'utf8');
+      file.modifiedAt = new Date();
+    }
+    if (Array.isArray(tags)) {
+      file.tags = tags.slice(0, 5);
+    }
+    if (name) {
+      file.name = name;
+    }
+
+    await file.save();
+    res.status(200).json({ message: 'File updated successfully', file });
+  } catch (err) {
+    console.error('[EDIT FILE ERROR]', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
+router.put('/:id', authMiddleware, async (req, res) => {
+  try {
+    const { content } = req.body;
+    const file = await FileOrFolder.findById(req.params.id);
+
+    if (!file) return res.status(404).json({ error: 'File not found' });
+
+    const isOwner = file.owner.toString() === req.user._id.toString();
+    if (!isOwner) return res.status(403).json({ error: 'Only owner can edit' });
+
+    file.content = content;
+    file.modifiedAt = new Date();
+    await file.save();
+
+    res.json({ message: 'Saved' });
+  } catch (err) {
+    console.error('[EDIT ERROR]', err);
+    res.status(500).json({ error: 'Update failed' });
+  }
+});
+
+router.patch('/:id/edit', authMiddleware, async (req, res) => {
+  try {
+    const file = await FileOrFolder.findById(req.params.id);
+    if (!file) return res.status(404).json({ error: 'File not found' });
+
+    if (file.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const { content, tags, name } = req.body;
+    file.content = content || file.content;
+    file.tags = tags || file.tags;
+    file.name = name || file.name;
+    file.modifiedAt = new Date();
+
+    await file.save();
+    res.json({ message: 'File updated' });
+  } catch (err) {
+    console.error('[EDIT FILE ERROR]', err);
+    res.status(500).json({ error: 'Failed to edit file' });
+  }
+});
+
+
+
+router.patch('/:id/permissions', authMiddleware, async (req, res) => {
+  try {
+    const { isPublic, permissions } = req.body;
+    const file = await FileOrFolder.findById(req.params.id);
+    if (!file) return res.status(404).json({ error: 'File not found' });
+
+    // Only owner can change public status or permissions
+    if (file.owner.toString() !== req.user.id)
+      return res.status(403).json({ error: 'Unauthorized' });
+
+    if (typeof isPublic === 'boolean') {
+      file.isPublic = isPublic;
+      file.publicLinkId = isPublic ? (file.publicLinkId || uuidv4()) : null;
+    }
+
+    if (permissions) {
+      file.permissions = new Map(Object.entries(permissions));
+    }
+
+    await file.save();
+    res.json({ success: true, publicLinkId: file.publicLinkId });
+  } catch (err) {
+    console.error('[PERMISSION ERROR]', err);
+    res.status(500).json({ error: 'Server error while updating permissions' });
   }
 });
 
@@ -437,49 +627,84 @@ router.put("/:id/unlock", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Failed to unlock file" });
   }
 });
-// File Upload
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, '../uploads');
-    if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath);
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = `${Date.now()}-${file.originalname}`;
-    cb(null, uniqueName);
-  }
-});
-const upload = multer({ storage });
+
 
 router.post('/upload', authMiddleware, upload.single('file'), async (req, res) => {
+  const { parent } = req.body;
+  if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+
+  const newFile = new FileOrFolder({
+    name: req.file.originalname,
+    type: 'file',
+    content: '', // Optionally read content
+    owner: req.user.id,
+    nameOnDisk: req.file.filename,
+    parent: parent || null,
+    size: req.file.size,
+    uploadPath: req.file.path
+  });
+
+  await newFile.save();
+  res.status(201).json(newFile);
+});
+
+
+
+
+// Download Route
+router.get('/download/:id', authMiddleware, async (req, res) => {
   try {
-    const uploadedFile = new FileOrFolder({
-      name: req.file.originalname,
-      type: 'file',
-      owner: req.user.id,
-      parent: req.body.parent || null,
-      size: req.file.size,
-      uploadPath: req.file.filename,
-    });
-    await uploadedFile.save();
-    res.status(201).json(uploadedFile);
+    const file = await FileOrFolder.findById(req.params.id);
+    if (!file) return res.status(404).send('File not found');
+
+    if (file.content !== undefined && file.content !== null) {
+      // Text-based file stored in Mongo
+      const buffer = Buffer.from(file.content, 'utf-8');
+      res.set({
+        'Content-Disposition': `attachment; filename="${file.name}.txt"`,
+        'Content-Type': 'text/plain',
+      });
+      return res.send(buffer);
+    }
+
+    if (!file.nameOnDisk) {
+      return res.status(400).send('No file uploaded for this entry');
+    }
+
+    const filePath = path.join(__dirname, '..', 'uploads', file.nameOnDisk);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send('File not found on disk');
+    }
+
+    res.download(filePath, file.name);
   } catch (err) {
-    res.status(500).json({ message: 'Upload failed' });
+    console.error('[DOWNLOAD ERROR]', err);
+    res.status(500).send('Download failed');
   }
 });
 
-// Download route
-router.get('/:id/download', authMiddleware, async (req, res) => {
+
+// GET public file by link ID
+router.get('/public/:publicLinkId', async (req, res) => {
   try {
-    const file = await FileOrFolder.findById(req.params.id);
-    if (!file || file.type !== 'file' || !hasPermission(file, req.user)) {
-      return res.status(403).json({ message: 'Access denied' });
+    const file = await FileOrFolder.findOne({ publicLinkId: req.params.publicLinkId });
+
+    if (!file || file.type !== 'file') {
+      return res.status(404).json({ error: 'File not found or not a valid file' });
     }
 
-    const filePath = path.join(__dirname, '../uploads', file.uploadPath);
-    res.download(filePath, file.name);
+    if (!file.uploadPath) {
+      console.error('[UPLOAD PATH ERROR] File is missing uploadPath:', file);
+      return res.status(500).json({ error: 'File upload path missing' });
+    }
+
+    const filePath = path.join(__dirname, '..', file.uploadPath);
+    console.log('[PUBLIC FILE DOWNLOAD]', filePath);
+
+    return res.sendFile(filePath);
   } catch (err) {
-    res.status(500).json({ message: 'Download failed' });
+    console.error('[PUBLIC LINK ERROR]', err);
+    return res.status(500).json({ error: 'Failed to access file' });
   }
 });
 
@@ -510,21 +735,35 @@ router.get('/:id/preview', authMiddleware, async (req, res) => {
 
 // Permissions
 router.patch('/:id/permissions', authMiddleware, async (req, res) => {
-  const { permissions } = req.body;
-  try {
-    const file = await FileOrFolder.findById(req.params.id);
-    if (!file || file.owner.toString() !== req.user.id) {
-      return res.status(403).json({ message: 'Only owner can change permissions' });
-    }
-    if (node.name === "Recycle Bin" && node.parent === null) {
-  return res.status(403).json({ error: "Cannot share the Recycle Bin folder" });
-}
+  const { isPublic } = req.body;
+  const fileId = req.params.id;
 
-    file.permissions = permissions;
+  try {
+    const file = await FileOrFolder.findById(fileId);
+
+    if (!file) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    if (!file.owner.equals(req.user._id)) {
+      return res.status(403).json({ error: 'Unauthorized to update permissions' });
+    }
+
+    if (typeof isPublic !== 'undefined') {
+      file.isPublic = isPublic;
+
+      if (isPublic && !file.publicLinkId) {
+        file.publicLinkId = uuidv4();
+      } else if (!isPublic) {
+        file.publicLinkId = null;
+      }
+    }
+
     await file.save();
-    res.json({ message: 'Permissions updated' });
+    return res.json({ success: true, file });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('[PERMISSION UPDATE ERROR]', err);
+    return res.status(500).json({ error: 'Failed to update permissions' });
   }
 });
 

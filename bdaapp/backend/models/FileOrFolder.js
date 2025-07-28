@@ -26,7 +26,9 @@ symlinkTarget: {
   type: mongoose.Schema.Types.ObjectId,
   ref: 'FileOrFolder',
   default: null
-}
+},
+publicLinkId: { type: String, default: null }
+
 });
 
 

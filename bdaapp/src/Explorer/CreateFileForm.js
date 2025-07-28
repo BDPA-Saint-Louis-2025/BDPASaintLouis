@@ -6,31 +6,45 @@ const CreateFileForm = ({ onCreate }) => {
   const [type, setType] = useState('file');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
+const handleCreate = async (type) => {
+  const name = prompt(`Enter ${type} name:`); // inline prompt
+  if (!name) return;
 
-  const handleCreate = async () => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-
-    const newFile = {
-      name,
-      type,
-      content: type === 'file' ? content : undefined,
-      tags: type === 'file' ? tags.split(',').map(tag => tag.trim()) : [],
-    };
-
-    try {
-      const res = await axios.post('http://localhost:5000/api/files/create', newFile, {
-        headers: {
-          Authorization: token,
-        },
-      });
-      onCreate(res.data); // Callback to refresh file list
-      setName('');
-      setContent('');
-      setTags('');
-    } catch (err) {
-      alert('Error creating file/folder');
-    }
+  const body = {
+    name,
+    type,
+    parent: currentFolderId || null
   };
+
+
+   console.log("Creating with parent:", currentFolderId);
+   
+  if (type === 'file') {
+    body.content = '';
+    body.tags = [];
+  }
+
+  try {
+    const res = await fetch('http://localhost:5000/api/files/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (res.ok) {
+      setActiveSection('home'); // or whatever updates your UI
+      await fetchFiles(currentFolderId, 'home');
+    } else {
+      alert('Failed to create file/folder');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Create error');
+  }
+};
 
   return (
     <div style={{ marginBottom: '20px' }}>
