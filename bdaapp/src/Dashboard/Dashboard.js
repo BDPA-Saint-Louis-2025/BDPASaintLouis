@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import HomeIcon from '@mui/icons-material/Home';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import CloseIcon from '@mui/icons-material/Close';
@@ -11,26 +10,24 @@ function Dashboard() {
   const [storageUsed, setStorageUsed] = useState(0);
   const [message, setMessage] = useState('');
 
-  // Bio
-  const [bio, setBio] = useState('');
-  const [isBioModalOpen, setIsBioModalOpen] = useState(false);
-  const [newBio, setNewBio] = useState('');
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
 
-  // Modal states
-  const [isUsernameModalOpen, setIsUsernameModalOpen] = useState(false);
+  useEffect(() => {
+    document.body.classList.toggle('dark', theme === 'dark');
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-
-  // Form values
-  const [newUsername, setNewUsername] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
-  // Validation flags
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [shakeEmail, setShakeEmail] = useState(false);
-  const [shakeUsername, setShakeUsername] = useState(false);
   const [shakePassword, setShakePassword] = useState(false);
 
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -43,7 +40,6 @@ function Dashboard() {
         });
         const data = await res.json();
         setUserInfo(data);
-        setBio(data.bio || '');
       } catch {
         setUserInfo(null);
       }
@@ -65,8 +61,6 @@ function Dashboard() {
     fetchStorage();
   }, [token]);
 
-  /** VALIDATIONS **/
-  const isValidUsername = (username) => /^[a-zA-Z0-9-_]+$/.test(username);
   const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
   const hasSpecialChar = (password) => /[!@#$%^&*(),.?":{}|<>]/.test(password);
   const isAlphanumericWithDashes = (password) =>
@@ -79,7 +73,6 @@ function Dashboard() {
     return 'weak';
   };
 
-  /** Reload User Info **/
   const reloadUserInfo = async () => {
     try {
       const res = await fetch('http://localhost:5000/api/auth/me', {
@@ -87,36 +80,9 @@ function Dashboard() {
       });
       const data = await res.json();
       setUserInfo(data);
-      setBio(data.bio || '');
     } catch {}
   };
 
-  /** USERNAME **/
-  const handleUpdateUsername = async () => {
-    if (!isValidUsername(newUsername)) {
-      setShakeUsername(true);
-      setTimeout(() => setShakeUsername(false), 500);
-      return setMessage('Username must be alphanumeric (dashes and underscores allowed).');
-    }
-    try {
-      const res = await fetch('http://localhost:5000/api/auth/username', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token,
-        },
-        body: JSON.stringify({ username: newUsername }),
-      });
-      const data = await res.json();
-      setMessage(data.message || 'Username updated');
-      setIsUsernameModalOpen(false);
-      reloadUserInfo();
-    } catch {
-      setMessage('Username update failed');
-    }
-  };
-
-  /** EMAIL **/
   const handleUpdateEmail = async () => {
     if (!isValidEmail(newEmail)) {
       setIsEmailValid(false);
@@ -143,9 +109,12 @@ function Dashboard() {
     }
   };
 
-  /** PASSWORD **/
   const handleUpdatePassword = async () => {
-    if (newPassword !== confirmPassword || passwordStrength(newPassword) === 'weak' || passwordStrength(newPassword) === 'invalid') {
+    if (
+      newPassword !== confirmPassword ||
+      passwordStrength(newPassword) === 'weak' ||
+      passwordStrength(newPassword) === 'invalid'
+    ) {
       setShakePassword(true);
       setTimeout(() => setShakePassword(false), 500);
       return setMessage('Password must meet all requirements.');
@@ -169,27 +138,6 @@ function Dashboard() {
     }
   };
 
-  /** BIO **/
-  const handleUpdateBio = async () => {
-    try {
-      const res = await fetch('http://localhost:5000/api/auth/bio', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token,
-        },
-        body: JSON.stringify({ bio: newBio }),
-      });
-      const data = await res.json();
-      setMessage(data.message || 'Bio updated');
-      setIsBioModalOpen(false);
-      reloadUserInfo();
-    } catch {
-      setMessage('Bio update failed');
-    }
-  };
-
-  /** DELETE ACCOUNT **/
   const handleDeleteAccount = async () => {
     if (!window.confirm('Are you sure? This will delete your account and all files.')) return;
     try {
@@ -211,14 +159,10 @@ function Dashboard() {
 
   return (
     <div className="drive-layout">
-      {/* SIDEBAR */}
       <aside className="sidebar">
         <nav className="nav">
           <button onClick={() => (window.location.href = '/explorer')}>
             <HomeIcon /> My Drive
-          </button>
-          <button onClick={() => (window.location.href = '/recent')}>
-            <AccessTimeIcon /> Recent
           </button>
           <button onClick={() => (window.location.href = '/shared')}>
             <PeopleAltIcon /> Shared with me
@@ -231,20 +175,19 @@ function Dashboard() {
         </div>
       </aside>
 
-      {/* MAIN CONTENT */}
       <main className="content">
+        <button className="primary-btn" onClick={toggleTheme}>
+          Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode
+        </button>
+
         <h2>Dashboard</h2>
         <p><strong>Username:</strong> {userInfo.username}</p>
         <p><strong>Email:</strong> {userInfo.email}</p>
-        <p><strong>Bio:</strong> {bio || 'No bio set.'}</p>
         <p><strong>Storage Used:</strong> {storageUsed} bytes</p>
 
-        {/* Horizontal Buttons */}
         <div className="button-row">
-          <button className="primary-btn" onClick={() => setIsUsernameModalOpen(true)}>Edit Username</button>
           <button className="primary-btn" onClick={() => setIsEmailModalOpen(true)}>Edit Email</button>
           <button className="primary-btn" onClick={() => setIsPasswordModalOpen(true)}>Edit Password</button>
-          <button className="primary-btn" onClick={() => setIsBioModalOpen(true)}>Edit Bio</button>
         </div>
 
         <div className="section danger-zone">
@@ -256,24 +199,6 @@ function Dashboard() {
 
         {message && <p className="success-message">{message}</p>}
       </main>
-
-      {/* MODALS */}
-      {isUsernameModalOpen && (
-        <Modal title="Edit Username" onClose={() => setIsUsernameModalOpen(false)}>
-          <input
-            type="text"
-            className={shakeUsername ? 'shake' : ''}
-            placeholder="Enter new username"
-            value={newUsername}
-            onChange={(e) => setNewUsername(e.target.value)}
-          />
-          <small>Must be alphanumeric (dashes and underscores allowed).</small>
-          <div className="modal-actions">
-            <button onClick={handleUpdateUsername}>Save</button>
-            <button className="cancel" onClick={() => setIsUsernameModalOpen(false)}>Cancel</button>
-          </div>
-        </Modal>
-      )}
 
       {isEmailModalOpen && (
         <Modal title="Edit Email" onClose={() => setIsEmailModalOpen(false)}>
@@ -320,21 +245,6 @@ function Dashboard() {
           <div className="modal-actions">
             <button onClick={handleUpdatePassword}>Save</button>
             <button className="cancel" onClick={() => setIsPasswordModalOpen(false)}>Cancel</button>
-          </div>
-        </Modal>
-      )}
-
-      {isBioModalOpen && (
-        <Modal title="Edit Bio" onClose={() => setIsBioModalOpen(false)}>
-          <textarea
-            placeholder="Write something about yourself..."
-            value={newBio}
-            onChange={(e) => setNewBio(e.target.value)}
-            rows="4"
-          />
-          <div className="modal-actions">
-            <button onClick={handleUpdateBio}>Save</button>
-            <button className="cancel" onClick={() => setIsBioModalOpen(false)}>Cancel</button>
           </div>
         </Modal>
       )}

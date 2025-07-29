@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './SignUpForm.css';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -9,6 +9,17 @@ const SignUpForm = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+
+  useEffect(() => {
+    document.body.classList.toggle('dark', theme === 'dark');
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -83,25 +94,32 @@ const SignUpForm = () => {
                 required
               />
             </div>
+
             {error && <p style={{ color: 'red', fontSize: '14px' }}>{error}</p>}
             {success && <p style={{ color: 'green', fontSize: '14px' }}>{success}</p>}
+
             <button type="submit">Sign Up</button>
           </form>
 
           <p className="or-separator">OR</p>
 
-          {/* Guest Button */}
-          <Link to="/public" className="guest-btn">
+          <Link to="/public-explorer" className="guest-btn">
             Continue as Guest
           </Link>
 
-          <p style={{ marginTop: '15px' }}>
-            Already have an account? <Link to="/login" className="link-option">Log In</Link>
-          </p>
+          <div className="login-theme-row">
+            <p>
+              Already have an account?{' '}
+              <Link to="/login" className="link-option">Log In</Link>
+            </p>
+            <button className="primary-btn" onClick={toggleTheme}>
+              {theme === 'light' ? ' Dark' : ' Light'}
+            </button>
+          </div>
         </div>
 
         <div className="right-column">
-          {/* Optionally place an image or promotional content here */}
+          {/* You can place an image or branding content here */}
         </div>
       </div>
     </div>

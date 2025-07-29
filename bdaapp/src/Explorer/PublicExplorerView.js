@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import './ExplorerView.css'; // Reusing shared styles like .content, .folder-card, etc.
+import './ExplorerView.css'; // Make sure dark/light styles are applied in this CSS
 
 function PublicExplorerView() {
   const [files, setFiles] = useState([]);
@@ -11,10 +11,18 @@ function PublicExplorerView() {
       .catch(() => setFiles([]));
   }, []);
 
+  useEffect(() => {
+  const storedTheme = localStorage.getItem('theme') || 'light';
+  document.body.classList.toggle('dark', storedTheme === 'dark');
+}, []);
+
+
   return (
     <div className="content">
       {/* Page Title */}
-      <h2 style={{ color: '#5f4b8b', marginBottom: '16px' }}>Public File Viewer</h2>
+      <h2 className="section-title" style={{ marginBottom: '16px' }}>
+        Public File Viewer
+      </h2>
 
       {/* File List */}
       <ul style={{ listStyle: 'none', padding: 0 }}>
@@ -27,32 +35,23 @@ function PublicExplorerView() {
               flexDirection: 'column',
               alignItems: 'flex-start',
               paddingBottom: '12px',
-              paddingTop: '12px'
+              paddingTop: '12px',
             }}
           >
             {/* File Name */}
-            <div
-              style={{
-                fontSize: '16px',
-                fontWeight: 'bold',
-                color: '#4b3869',
-                marginBottom: '4px'
-              }}
-            >
+            <div className="file-name">
               {file.name}{' '}
-              <span style={{ fontSize: '13px', fontWeight: 'normal' }}>
-                ({file.type})
-              </span>
+              <span className="file-type">({file.type})</span>
             </div>
 
             {/* Last Modified */}
-            <div style={{ fontSize: '13px', color: '#7a6499', marginBottom: '4px' }}>
+            <div className="file-meta">
               Last modified: {new Date(file.modifiedAt).toLocaleString()}
             </div>
 
             {/* Tags (if present) */}
             {file.tags?.length > 0 && (
-              <div style={{ fontSize: '13px', color: '#8d77a5' }}>
+              <div className="file-tags">
                 Tags: {file.tags.join(', ')}
               </div>
             )}

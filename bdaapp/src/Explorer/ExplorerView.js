@@ -74,6 +74,13 @@ const { fileId } = useParams();
 const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   const decoded = token ? jwtDecode(token) : {};
 
+  useEffect(() => {
+  const storedTheme = localStorage.getItem('theme') || 'light';
+  document.body.classList.toggle('dark', storedTheme === 'dark');
+}, []);
+
+
+
   // Debounced search
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
