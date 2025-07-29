@@ -76,6 +76,9 @@ const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
   // Debounced search
   useEffect(() => {
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+console.log("Saved token:", token); // This must not be null
+
     const handler = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
     return () => clearTimeout(handler);
   }, [searchTerm]);
@@ -383,7 +386,10 @@ const generateShareableLink = async (itemId) => {
   }
 };
 
+const token1 = localStorage.getItem('token') || sessionStorage.getItem('token');
 
+console.log("Saved token:", token1); // This must not be null
+console.log('[TOKEN USED FOR DELETE]', token1);
 
 const handleDelete = async (itemId) => {
   console.log('[DELETE ATTEMPT] Deleting ID:', itemId);
@@ -391,10 +397,12 @@ const handleDelete = async (itemId) => {
   if (!window.confirm('Are you sure you want to delete this item?')) return;
 
   try {
+
+    
     const res = await fetch(`http://localhost:5000/api/files/${itemId}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token1}`
       }
     });
 
