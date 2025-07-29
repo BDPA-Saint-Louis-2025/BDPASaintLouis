@@ -1,34 +1,71 @@
-/* Center everything on the page */
+/* -------------------- PAGE LAYOUT -------------------- */
+
+/* THEME VARIABLES */
+:root {
+  --bg-color: #faf5ff;
+  --text-color: #333;
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e0d7ff;
+  --primary-color: #9b5de5;
+  --primary-hover: #7a42d1;
+  --section-bg: #ffffff;
+  --danger-color: #d93025;
+  --danger-hover: #b31412;
+  --modal-bg: white;
+  --modal-shadow: rgba(0, 0, 0, 0.1);
+  --input-border: #d3bfff;
+  --input-bg: #fff;
+  --button-text: white;
+}
+
+body.dark {
+  --bg-color: #1e1e2a;           /* Darker base background */
+  --text-color: #ffffff;         /* Bright white for all text */
+  --sidebar-bg: #2a1e2f;         /* Dark purple/pink-tinted background */
+  --sidebar-border: #a44583;     /* Border with soft pink tint */
+  --primary-color: #FA0787;      /* Main pink */
+  --primary-hover: #d90673;      /* Darker pink for hover */
+  --section-bg: #2e1b2b;         /* Dark surface with pinkish undertone */
+  --danger-color: #ff4d6d;       /* Soft red-pink for delete/danger */
+  --danger-hover: #d03456;       /* Darker danger hover */
+  --modal-bg: #341e2e;           /* Modal background with rose tint */
+  --modal-shadow: rgba(255, 20, 147, 0.15); /* Subtle pink glow */
+  --input-border: #fa5a9f;       /* Pinkish input border */
+  --input-bg: #3b2636;           /* Darker input background */
+  --button-text: #ffffff;        /* White text for buttons */
+}
+
 .page-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+  background: var(--bg-color);
+  font-family: Arial, sans-serif;
 }
 
-/* Welcome Header */
 .header1 {
   text-align: center;
-  margin-bottom: 15px;
-  font-size: 75px;
+  margin-bottom: 25px;
+  font-size: 64px;
+  font-weight: bold;
+  color: var(--primary-hover);
 }
 
-/* Two-column layout */
 .signup-container {
   display: flex;
   gap: 40px;
   max-width: 900px;
   width: 100%;
   justify-content: center;
-
-  border: 1px solid #ccc;
-  border-radius: 10px;
   padding: 40px;
-  background-color: #f9f9f9;
+  border-radius: 12px;
+  background-color: var(--section-bg);
+  border: 1px solid var(--sidebar-border);
+  box-shadow: 0 8px 16px var(--modal-shadow);
 }
 
-/* Left column with two buttons */
 .left-column {
   display: flex;
   flex-direction: column;
@@ -38,24 +75,27 @@
   flex: 1;
 }
 
-/* Right column with form */
 .right-column {
   flex: 1;
 }
 
 .inputs {
   margin-bottom: 15px;
+  width: 100%;
 }
 
 .input {
   width: 100%;
-  padding: 10px;
-  border: 2px solid black;
-  font-size: 18px;
-  transition: border-color 0.4s ease;
+  padding: 12px;
+  font-size: 16px;
+  border: 2px solid var(--input-border);
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.3s ease;
+  color: var(--text-color);
+  background: var(--input-bg);
 }
 
-/* Password input color changes based on strength */
 .input.weak {
   border-color: #d8000c;
 }
@@ -68,43 +108,71 @@
   border-color: #28a745;
 }
 
-/* Optional: style buttons */
 button {
-  padding: 10px 20px;
+  padding: 10px 18px;
+  background: var(--primary-color);
+  color: var(--button-text);
+  border: none;
+  border-radius: 6px;
   font-size: 16px;
+  font-weight: bold;
   cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+button:hover {
+  background: var(--primary-hover);
 }
 
 .or-separator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 22px;
   font-weight: bold;
-  font-size: 25px;
-  padding: 0 10px;
-  color: #666;
+  color: #8d77a5;
+  margin: 10px 0;
+  text-align: center;
 }
 
 .link-option {
-  font-size: 30px;
-  color: #0c10f1;
+  font-size: 18px;
+  color: var(--primary-color);
   text-decoration: none;
-  margin: 10px 0;
   cursor: pointer;
+  transition: color 0.3s ease;
 }
 
 .link-option:hover {
+  color: var(--primary-hover);
   text-decoration: underline;
 }
 
-/* Password strength bar */
+/* Guest Button */
+.guest-btn {
+  display: inline-block;
+  padding: 10px 18px;
+  background: var(--section-bg);
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 6px;
+  text-align: center;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.guest-btn:hover {
+  background: var(--primary-color);
+  color: var(--button-text);
+}
+
+/* Password strength (if used) */
 .strength-bar {
   margin-top: 6px;
   height: 6px;
   border-radius: 3px;
-  background-color: transparent;
+  background-color: #eee;
   width: 100%;
-  transition: width 0.4s ease, background-color 0.4s ease;
+  transition: width 0.3s ease, background-color 0.3s ease;
 }
 
 .strength-bar.weak {
@@ -122,7 +190,51 @@ button {
   background-color: #28a745;
 }
 
-/* Hide strength text */
 .strength-text {
   display: none;
 }
+
+/* Options row (if used later) */
+.options-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--primary-hover);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.option-item:hover {
+  color: var(--primary-color);
+}
+
+.option-item input[type='checkbox'] {
+  accent-color: var(--primary-color);
+  width: 16px;
+  height: 16px;
+}
+
+.login-theme-row {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.login-theme-row p {
+  margin: 0;
+  font-size: 16px;
+}
+

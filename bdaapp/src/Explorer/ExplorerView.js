@@ -74,6 +74,13 @@ const { fileId } = useParams();
 const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   const decoded = token ? jwtDecode(token) : {};
 
+  useEffect(() => {
+  const storedTheme = localStorage.getItem('theme') || 'light';
+  document.body.classList.toggle('dark', storedTheme === 'dark');
+}, []);
+
+
+
   // Debounced search
   useEffect(() => {
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -510,9 +517,7 @@ const handleDelete = async (itemId) => {
         <button className={activeSection === 'home' ? 'active' : ''} onClick={() => { setCurrentFolderId(null); setActiveSection('home'); }}>
           <HomeIcon /> My Drive
         </button>
-        <button className={activeSection === 'recent' ? 'active' : ''} onClick={() => { setCurrentFolderId(null); setActiveSection('recent'); }}>
-          <AccessTimeIcon /> Recent
-        </button>
+        
         <button className={activeSection === 'shared' ? 'active' : ''} onClick={() => { setCurrentFolderId(null); setActiveSection('shared'); }}>
           <PeopleAltIcon /> Shared with me
         </button>
