@@ -192,5 +192,23 @@ router.post('/reset-password/:token', async (req, res) => {
   }
 });
 
+
+router.patch('/username', authMiddleware, async (req, res) => {
+  const { username } = req.body;
+
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.username = username;
+    await user.save();
+
+    res.json({ message: 'Username updated successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
 

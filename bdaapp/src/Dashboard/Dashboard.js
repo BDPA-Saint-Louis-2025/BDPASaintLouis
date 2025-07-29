@@ -99,14 +99,15 @@ function Dashboard() {
       return setMessage('Username must be alphanumeric (dashes and underscores allowed).');
     }
     try {
-      const res = await fetch('http://localhost:5000/api/auth/username', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token,
-        },
-        body: JSON.stringify({ username: newUsername }),
-      });
+ const res = await fetch('http://localhost:5000/api/auth/username', {
+  method: 'PATCH',
+  headers: {
+    'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`, 
+  },
+  body: JSON.stringify({ username: newUsername }),
+});
+
       const data = await res.json();
       setMessage(data.message || 'Username updated');
       setIsUsernameModalOpen(false);
@@ -154,8 +155,8 @@ function Dashboard() {
       const res = await fetch('http://localhost:5000/api/auth/password', {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: token,
+      'Content-Type': 'application/json',
+  Authorization: `Bearer ${token}`, 
         },
         body: JSON.stringify({ password: newPassword }),
       });
@@ -175,8 +176,8 @@ function Dashboard() {
       const res = await fetch('http://localhost:5000/api/auth/bio', {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: token,
+           'Content-Type': 'application/json',
+  Authorization: `Bearer ${token}`, 
         },
         body: JSON.stringify({ bio: newBio }),
       });
