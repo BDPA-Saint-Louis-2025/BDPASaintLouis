@@ -15,6 +15,7 @@ const mimeTypes = {
   md: 'text/markdown',
 };
 
+const mime = require('mime-types');
 
 
 
@@ -640,16 +641,17 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req, res) =
   const { parent } = req.body;
   if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
 
-  const newFile = new FileOrFolder({
-    name: req.file.originalname,
-    type: 'file',
-    content: '', // Optionally read content
-    owner: req.user.id,
-    nameOnDisk: req.file.filename,
-    parent: parent || null,
-    size: req.file.size,
-    uploadPath: req.file.path
-  });
+ const newFile = new FileOrFolder({
+  name: req.file.originalname,
+  type: 'file',
+  content: '',
+  owner: req.user.id,
+  nameOnDisk: path.basename(req.file.path),
+  parent: parent || null,
+  size: req.file.size,
+  uploadPath: req.file.path,
+  mimeType: mime.lookup(req.file.originalname) || 'application/octet-stream'
+});
 
   await newFile.save();
   res.status(201).json(newFile);
@@ -657,44 +659,48 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req, res) =
 
 
 
-
 // Download Route
+
 router.get('/download/:id', authMiddleware, async (req, res) => {
   try {
     const file = await FileOrFolder.findById(req.params.id);
     if (!file) return res.status(404).send('File not found');
 
-    // Text-based files stored in MongoDB
-    if (file.content !== undefined && file.content !== null) {
-      const extension = file.name.split('.').pop();
-      const mimeType = mimeTypes[extension] || 'text/plain';
-      const buffer = Buffer.from(file.content, 'utf-8');
-
-      res.set({
-        'Content-Disposition': `attachment; filename="${file.name}"`,
-        'Content-Type': mimeType,
-      });
-
-      return res.send(buffer);
-    }
-
-    // File uploaded to disk (e.g., PDFs, Excel files, etc.)
     if (!file.nameOnDisk) {
-      return res.status(400).send('No file uploaded for this entry');
+      console.error('[DOWNLOAD ERROR] nameOnDisk is missing:', file);
+      return res.status(400).send('No uploaded file found on disk');
     }
 
     const filePath = path.join(__dirname, '..', 'uploads', file.nameOnDisk);
     if (!fs.existsSync(filePath)) {
+      console.error('[DOWNLOAD ERROR] File does not exist on disk:', filePath);
       return res.status(404).send('File not found on disk');
     }
 
-    // Use original name from DB
-    res.download(filePath, file.name);
+    const mimeType = mime.lookup(file.name) || 'application/octet-stream';
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
+
+    fs.createReadStream(filePath).pipe(res);
   } catch (err) {
     console.error('[DOWNLOAD ERROR]', err);
     res.status(500).send('Download failed');
   }
 });
+
+
+// Helper: infer content-type from extension
+function getMimeType(ext) {
+  switch (ext.toLowerCase()) {
+    case '.pdf': return 'application/pdf';
+    case '.txt': return 'text/plain';
+    case '.xlsx': return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    case '.docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    case '.md': return 'text/markdown';
+    case '.json': return 'application/json';
+    default: return 'application/octet-stream';
+  }
+}
 
 
 // GET public file by link ID
