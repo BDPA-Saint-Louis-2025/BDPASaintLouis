@@ -1,0 +1,10 @@
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAttk8I41f21NdUMQJbdHpZD5eRa0BkwIc",
+  authDomain: "slu-pick-up-games.firebaseapp.com",
+  projectId: "slu-pick-up-games",
+  storageBucket: "slu-pick-up-games.firebasestorage.app",
+  messagingSenderId: "586896831943",
+  appId: "1:586896831943:web:e7f2603001806c96f815e2",
+  measurementId: "G-R2WF68HNZF"
+};
