@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const authMiddleware = require('../middleware/auth');
+const verifyToken = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -63,11 +64,25 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 // Update email
-router.patch('/email', authMiddleware, async (req, res) => {
+router.patch("/email", verifyToken, async (req, res) => {
   const { email } = req.body;
-  await User.findByIdAndUpdate(req.user.id, { email });
-  res.json({ message: 'Email updated' });
+  const userId = req.user.id;
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { email },
+      { new: true }
+    );
+
+    res.json({ message: "Email updated successfully", email: user.email });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
+
+
 
 // Update password
 router.patch('/password', authMiddleware, async (req, res) => {
@@ -164,6 +179,8 @@ router.get('/reset-password/:token', async (req, res) => {
 });
 
 
+
+
 router.post('/reset-password/:token', async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
@@ -189,6 +206,24 @@ router.post('/reset-password/:token', async (req, res) => {
     res.json({ message: 'Password successfully reset' });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.patch('/username', authMiddleware, async (req, res) => {
+  try {
+    console.log('PATCH /username → req.user:', req.user);
+    console.log('PATCH /username → req.body:', req.body);
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.username = req.body.username;
+    await user.save();
+
+    return res.json({ message: 'Username updated' });
+  } catch (err) {
+    console.error('PATCH /username error:', err);
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 

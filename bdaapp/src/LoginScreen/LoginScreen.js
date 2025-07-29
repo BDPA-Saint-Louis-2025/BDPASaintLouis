@@ -23,28 +23,34 @@ function LoginScreen() {
   };
 
   const handleLogin = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
+  try {
+    const res = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
 
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.message || "Invalid login");
-      } else {
-        const storage = isChecked ? localStorage : sessionStorage;
-        storage.setItem("token", data.token);
-        storage.setItem("username", data.user.username);
+    const data = await res.json();
 
-        alert(`Welcome back, ${data.user.username}!`);
-        navigate("/explorer");
-      }
-    } catch (err) {
-      setError("Network error");
+    if (!res.ok) {
+      setError(data.message || "Invalid login");
+      return;
     }
-  };
+
+    const storage = isChecked ? localStorage : sessionStorage;
+    storage.setItem("token", data.token);
+    storage.setItem("username", data.user.username);
+
+    console.log("Saved token:", data.token);
+    alert(`Welcome back, ${data.user.username}!`);
+    navigate("/explorer");
+
+  } catch (err) {
+    console.error(err);
+    setError("Network error");
+  }
+};
+
 
   return (
     <div className="page-container">

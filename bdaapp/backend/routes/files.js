@@ -7,6 +7,13 @@ const fs = require('fs');
 const User = require('../models/User'); 
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
+const mimeTypes = {
+  txt: 'text/plain',
+  pdf: 'application/pdf',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  md: 'text/markdown',
+};
 
 
 
@@ -657,16 +664,21 @@ router.get('/download/:id', authMiddleware, async (req, res) => {
     const file = await FileOrFolder.findById(req.params.id);
     if (!file) return res.status(404).send('File not found');
 
+    // Text-based files stored in MongoDB
     if (file.content !== undefined && file.content !== null) {
-      // Text-based file stored in Mongo
+      const extension = file.name.split('.').pop();
+      const mimeType = mimeTypes[extension] || 'text/plain';
       const buffer = Buffer.from(file.content, 'utf-8');
+
       res.set({
-        'Content-Disposition': `attachment; filename="${file.name}.txt"`,
-        'Content-Type': 'text/plain',
+        'Content-Disposition': `attachment; filename="${file.name}"`,
+        'Content-Type': mimeType,
       });
+
       return res.send(buffer);
     }
 
+    // File uploaded to disk (e.g., PDFs, Excel files, etc.)
     if (!file.nameOnDisk) {
       return res.status(400).send('No file uploaded for this entry');
     }
@@ -676,6 +688,7 @@ router.get('/download/:id', authMiddleware, async (req, res) => {
       return res.status(404).send('File not found on disk');
     }
 
+    // Use original name from DB
     res.download(filePath, file.name);
   } catch (err) {
     console.error('[DOWNLOAD ERROR]', err);

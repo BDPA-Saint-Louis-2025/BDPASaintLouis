@@ -45,17 +45,25 @@ function Dashboard() {
       }
     };
 
-    const fetchStorage = async () => {
-      try {
-        const res = await fetch('http://localhost:5000/api/files/storage', {
-          headers: { Authorization: token },
-        });
-        const data = await res.json();
-        setStorageUsed(data.totalSize || 0);
-      } catch {
-        setStorageUsed(0);
-      }
-    };
+const fetchStorage = async () => {
+  try {
+    const res = await fetch('http://localhost:5000/api/files/storage', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      setStorageUsed(data.totalSize || 0);
+    } else {
+      console.error(data.message);
+    }
+  } catch (err) {
+    console.error('Error fetching storage:', err);
+  }
+};
+
 
     fetchUser();
     fetchStorage();
@@ -83,31 +91,74 @@ function Dashboard() {
     } catch {}
   };
 
-  const handleUpdateEmail = async () => {
-    if (!isValidEmail(newEmail)) {
-      setIsEmailValid(false);
-      setShakeEmail(true);
-      setTimeout(() => setShakeEmail(false), 500);
-      return;
-    }
-    setIsEmailValid(true);
-    try {
-      const res = await fetch('http://localhost:5000/api/auth/email', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token,
-        },
-        body: JSON.stringify({ email: newEmail }),
-      });
-      const data = await res.json();
-      setMessage(data.message || 'Email updated');
-      setIsEmailModalOpen(false);
+  /** USERNAME **/
+ const handleUpdateUsername = async () => {
+  if (!isValidUsername(newUsername)) {
+    setShakeUsername(true);
+    setTimeout(() => setShakeUsername(false), 500);
+    return setMessage('Username must be alphanumeric (dashes and underscores allowed).');
+  }
+
+  try {
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+
+    const res = await fetch('http://localhost:5000/api/auth/username', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`, 
+      },
+      body: JSON.stringify({ username: newUsername }),
+    });
+
+    console.log(`Bearer token used: ${token}`);
+    const data = await res.json();
+    if (res.ok) {
+      setMessage(data.message || 'Username updated');
+      setIsUsernameModalOpen(false);
       reloadUserInfo();
-    } catch {
-      setMessage('Email update failed');
+    } else {
+      setMessage(data.message || 'Username update failed');
     }
-  };
+  } catch (err) {
+    setMessage('Username update failed');
+  }
+};
+
+
+  /** EMAIL **/
+const handleUpdateEmail = async (newEmail) => {
+  const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+
+  console.log("TOKEN BEING SENT: Bearer " + token);
+
+  if (!token) {
+    console.error("❌ No token provided to handleUpdateEmail");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:5000/api/auth/email", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ email: newEmail }),
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      console.log("✅ Email updated:", data.message);
+    } else {
+      console.error("❌ Error updating email:", data.message || data.error);
+    }
+  } catch (err) {
+    console.error("❌ Network error:", err);
+  }
+};
+
+
 
   const handleUpdatePassword = async () => {
     if (
@@ -120,11 +171,13 @@ function Dashboard() {
       return setMessage('Password must meet all requirements.');
     }
     try {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+
       const res = await fetch('http://localhost:5000/api/auth/password', {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: token,
+      'Content-Type': 'application/json',
+  Authorization: `Bearer ${token}`, 
         },
         body: JSON.stringify({ password: newPassword }),
       });
@@ -156,6 +209,7 @@ function Dashboard() {
   };
 
   if (!userInfo) return <p>Loading user data...</p>;
+console.log("Loaded token:", localStorage.getItem("token") || sessionStorage.getItem("token"));
 
   return (
     <div className="drive-layout">
@@ -211,8 +265,9 @@ function Dashboard() {
           />
           {!isEmailValid && <div className="error-message">Invalid email. Try again with a real email.</div>}
           <div className="modal-actions">
-            <button onClick={handleUpdateEmail}>Save</button>
-            <button className="cancel" onClick={() => setIsEmailModalOpen(false)}>Cancel</button>
+                <button onClick={() => handleUpdateEmail(newEmail)}>Save</button>
+
+                   <button className="cancel" onClick={() => setIsEmailModalOpen(false)}>Cancel</button>
           </div>
         </Modal>
       )}
