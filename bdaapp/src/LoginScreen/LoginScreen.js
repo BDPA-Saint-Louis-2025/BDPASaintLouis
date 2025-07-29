@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link} from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import './LoginScreen.css';
 
 function LoginScreen() {
@@ -30,9 +30,7 @@ function LoginScreen() {
         alert(`Welcome back, ${data.user.username}!`);
         navigate("/explorer");
         console.log('Saved token:', data.token);
-
       }
-
     } catch (err) {
       setError("Network error");
     }
@@ -41,6 +39,7 @@ function LoginScreen() {
   return (
     <div className='container'>
       <h1 className='header'>Welcome Back!</h1>
+
       <div className='inputs'>
         <input
           className='input'
@@ -57,14 +56,25 @@ function LoginScreen() {
           onChange={(e) => setPassword(e.target.value)}
         />
       </div>
-      <Link to="/signup" className='signupLink'>Don't have an account? Sign up</Link>
+
+      <Link to="/signup" className='signupLink'>
+        Don't have an account? Sign up
+      </Link>
+
       <div className='rememberMe'>
         <input type='checkbox' checked={isChecked} onChange={handleOnChange} /> Remember me
       </div>
-      <div className='Login' style={{ border: '2px solid black' }} onClick={handleLogin}>
+
+      <div className='Login' onClick={handleLogin}>
         Login
       </div>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      {/* Guest Button */}
+      <Link to="/public-explorer" className="guest-btn">
+        Continue as Guest
+      </Link>
+
+      {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
     </div>
   );
 }

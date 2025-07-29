@@ -3,7 +3,7 @@
   display: flex;
   height: 100vh;
   font-family: Arial, sans-serif;
-  background: #faf5ff; /* Soft lavender background */
+  background: #faf5ff; /* Soft lavender background for feminine styling */
 }
 
 /* ------------------------- SIDEBAR ------------------------- */
@@ -14,12 +14,12 @@
   padding: 10px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* Space for footer */
+  justify-content: space-between;
 }
 
-/* New button */
+/* "New" button - removed the "+" */
 .new-btn {
-  background: #9b5de5;
+  background: #9b5de5; /* Vibrant purple */
   color: white;
   border: none;
   padding: 12px;
@@ -35,7 +35,7 @@
   background: #7a42d1;
 }
 
-/* Navigation (My Drive, Recent, Shared) */
+/* Navigation buttons (My Drive, Shared With Me, Recent) */
 .nav button {
   display: flex;
   align-items: center;
@@ -58,7 +58,7 @@
   font-weight: bold;
 }
 
-/* Footer (Dashboard button) */
+/* Footer - Dashboard button */
 .sidebar-footer {
   border-top: 1px solid #e0d7ff;
   padding-top: 10px;
@@ -132,7 +132,7 @@
   font-size: 16px;
 }
 
-/* ------------------------- FOLDER/FILE ROW ------------------------- */
+/* ------------------------- FOLDER/FILE LISTING ------------------------- */
 .folder-row {
   display: flex;
   flex-direction: column;
@@ -174,12 +174,14 @@
   gap: 12px;
 }
 
+/* Item count on far right of folder row */
 .item-count {
   font-size: 13px;
   color: #5f4b8b;
   font-weight: 500;
 }
 
+/* Action buttons (view, edit, delete) */
 .file-actions {
   display: flex;
   align-items: center;
@@ -198,7 +200,7 @@
   color: #9b5de5;
 }
 
-/* ------------------------- PLACEHOLDER ------------------------- */
+/* ------------------------- PLACEHOLDER TEXT ------------------------- */
 .placeholder-space {
   text-align: center;
   padding: 20px;
@@ -279,8 +281,7 @@
   }
 }
 
-
-/* Filter section in sidebar */
+/* ------------------------- FILTER DROPDOWNS ------------------------- */
 .filter-section {
   margin-top: 20px;
   padding: 10px;
@@ -302,7 +303,7 @@
   color: #5f4b8b;
 }
 
-/* Back button styling */
+/* ------------------------- BACK BUTTON ------------------------- */
 .back-btn {
   display: inline-flex;
   align-items: center;
@@ -321,25 +322,34 @@
   background: #7a42d1;
 }
 
-.filter-section {
-  margin-top: 20px;
+/* ------------------------- NEW MENU DROPDOWN ------------------------- */
+.new-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Space between each menu item */
+  background: #ffffff;
+  border: 1px solid #e0d7ff;
+  border-radius: 8px;
   padding: 10px;
-  border-top: 1px solid #e0d7ff;
+  box-shadow: 0 4px 8px rgba(155, 93, 229, 0.1);
+  margin-top: 10px;
+  position: absolute;
+  z-index: 100;
 }
 
-.filter-section h4 {
-  font-size: 14px;
+.new-menu-item button {
+  background: #faf5ff;
+  border: none;
   color: #5f4b8b;
-  margin-bottom: 5px;
-}
-
-.filter-section select {
+  font-weight: bold;
+  padding: 10px 16px;
+  text-align: left;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
   width: 100%;
-  padding: 6px;
-  margin-bottom: 10px;
-  border-radius: 4px;
-  border: 1px solid #d3bfff;
-  font-size: 14px;
-  color: #5f4b8b;
 }
 
+.new-menu-item button:hover {
+  background: #e6dbff;
+}

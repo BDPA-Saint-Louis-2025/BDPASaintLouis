@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './SignUpForm.css';
-import { useNavigate, Link} from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const SignUpForm = () => {
   const [username, setUsername] = useState('');
@@ -33,35 +33,75 @@ const SignUpForm = () => {
         setError('');
       }
     } catch (err) {
-      setError("Network error");
+      setError("Server error. Please try again later.");
     }
   };
 
   return (
     <div className="page-container">
-      <h1 className="header1">Welcome!</h1>
+      <h1 className="header1">Create an Account</h1>
       <div className="signup-container">
-        <div className="right-column">
-          <h2 className="header2">Sign Up</h2>
-          <form onSubmit={handleSubmit}>
+        <div className="left-column">
+          <form onSubmit={handleSubmit} className="form">
             <div className="inputs">
-              <input className="input" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+              <input
+                className="input"
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
             </div>
             <div className="inputs">
-              <input className="input" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <input
+                className="input"
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
             <div className="inputs">
-              <input className="input" type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <input
+                className="input"
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
             </div>
             <div className="inputs">
-              <input className="input" type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+              <input
+                className="input"
+                type="password"
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
             </div>
-            <br />
-            <Link to="/login" className="loginLink">Already have an account? Log in</Link>
-            <button type="submit">Submit</button>
-            {error && <p style={{ color: "red" }}>{error}</p>}
-            {success && <p style={{ color: "green" }}>{success}</p>}
+            {error && <p style={{ color: 'red', fontSize: '14px' }}>{error}</p>}
+            {success && <p style={{ color: 'green', fontSize: '14px' }}>{success}</p>}
+            <button type="submit">Sign Up</button>
           </form>
+
+          <p className="or-separator">OR</p>
+
+          {/* Guest Button */}
+          <Link to="/public" className="guest-btn">
+            Continue as Guest
+          </Link>
+
+          <p style={{ marginTop: '15px' }}>
+            Already have an account? <Link to="/login" className="link-option">Log In</Link>
+          </p>
+        </div>
+
+        <div className="right-column">
+          {/* Optionally place an image or promotional content here */}
         </div>
       </div>
     </div>

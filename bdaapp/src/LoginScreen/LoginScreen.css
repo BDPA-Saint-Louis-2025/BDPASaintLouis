@@ -1,50 +1,97 @@
 .container {
-    min-height: 60vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center; /*Vertically aligns items*/
-    justify-content: center; /*Horizontally aligns items*/
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .inputs {
-    margin-bottom: 30px;
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  align-items: center;
 }
 
 .input {
-    display: flex;
-    align-items:center;
-    width: 660px;
-    height: 60px;
-    background: #f1f0f0;
-    border-radius: 6px;
-    padding-inline: 30px;
+  width: 660px;
+  height: 60px;
+  background: #f1f0f0;
+  border-radius: 6px;
+  padding-inline: 30px;
+  font-size: 18px;
+  border: none;
+  color: #5f4b8b;
 }
 
 input::placeholder {
   font-size: 20px;
 }
 
-.rememberMe {
-    margin-bottom: 3vh;
-    font-size: 17px;
+.header {
+  font-size: 60px;
+  margin-bottom: 20px;
+  color: #5f4b8b;
 }
 
-.header {
-    font-size:60px;
+.rememberMe {
+  margin-bottom: 20px;
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .Login {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 220px;
-    height: 60px;
-    background: #f1f0f0;
-    border-radius: 50px;
-    font-size: 20px;
-    font-weight: 700;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 220px;
+  height: 60px;
+  background: #f1f0f0;
+  border-radius: 50px;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background 0.3s ease;
+  color: #5f4b8b;
+}
+
+.Login:hover {
+  background: #dedcdc;
+}
+
+.signupLink {
+  font-size: 17px;
+  color: #9b5de5;
+  text-decoration: none;
+  margin-bottom: 15px;
+  transition: color 0.3s ease;
+}
+
+.signupLink:hover {
+  text-decoration: underline;
+  color: #7a42d1;
+}
+
+/* Guest Button */
+.guest-btn {
+  display: inline-block;
+  padding: 12px 20px;
+  background: #ffffff;
+  border: 2px solid #9b5de5;
+  color: #9b5de5;
+  font-size: 17px;
+  font-weight: bold;
+  border-radius: 8px;
+  text-align: center;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.guest-btn:hover {
+  background: #9b5de5;
+  color: #ffffff;
 }
