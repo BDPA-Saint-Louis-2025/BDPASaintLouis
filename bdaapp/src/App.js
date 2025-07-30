@@ -11,6 +11,8 @@ import ResetPassword from './ResetPassword/ResetPassword';
 import ForgotPasswordForm from './ForgotPassword/ForgotPasswordForm';
 import MainExplorerView from './Explorer/MainExplorerView';
 import PublicExplorerView from './Explorer/PublicExplorerView';
+import ForgotPassword from './ForgotPassword/ForgotPasswordForm';
+
 const getToken = () => {
   return localStorage.getItem('token') || sessionStorage.getItem('token');
 };
@@ -36,6 +38,8 @@ function App() {
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/explorer" element={<PrivateRoute><ExplorerView /></PrivateRoute>} />
         <Route path="/public-explorer" element={<PublicExplorerView />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+<Route path="/reset-password/:token" element={<ResetPassword />} />
       </Routes>
     </Router>
   );

@@ -29,6 +29,9 @@ function Dashboard() {
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [shakeEmail, setShakeEmail] = useState(false);
   const [shakePassword, setShakePassword] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
+const [shakeUsername, setShakeUsername] = useState(false);
+const [isUsernameModalOpen, setIsUsernameModalOpen] = useState(false);
 
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
@@ -90,6 +93,7 @@ const fetchStorage = async () => {
       setUserInfo(data);
     } catch {}
   };
+const isValidUsername = (username) => /^[a-zA-Z0-9_-]+$/.test(username);
 
   /** USERNAME **/
  const handleUpdateUsername = async () => {

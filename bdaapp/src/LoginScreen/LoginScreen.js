@@ -89,7 +89,11 @@ function LoginScreen() {
                 Remember Me
               </label>
             </div>
-
+    <p style={{ marginTop: '10px', fontSize: '14px' }}>
+    <Link to="/forgot-password" style={{ color: '#007bff', textDecoration: 'underline' }}>
+      Forgot your password?
+    </Link>
+    </p>
             {error && <p style={{ color: 'red', fontSize: '14px' }}>{error}</p>}
 
             <button type="submit">Login</button>
