@@ -4,13 +4,13 @@
   display: flex;
   height: 100vh;
   font-family: Arial, sans-serif;
-  background: #faf5ff;
+  background: var(--bg-color);
 }
 
 .sidebar {
   width: 240px;
-  background: #ffffff;
-  border-right: 1px solid #e0d7ff;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -18,8 +18,8 @@
 }
 
 .new-btn {
-  background: #9b5de5;
-  color: white;
+  background: var(--primary-color);
+  color: var(--button-text);
   border: none;
   padding: 12px;
   border-radius: 8px;
@@ -31,7 +31,7 @@
 }
 
 .new-btn:hover {
-  background: #7a42d1;
+  background: var(--primary-hover);
 }
 
 .nav button {
@@ -43,28 +43,28 @@
   padding: 10px 0;
   cursor: pointer;
   font-size: 14px;
-  color: #5f4b8b;
+  color: var(--text-color);
   transition: color 0.2s ease;
 }
 
 .nav button:hover {
-  color: #9b5de5;
+  color: var(--primary-color);
 }
 
 .nav .active {
-  color: #9b5de5;
+  color: var(--primary-color);
   font-weight: bold;
 }
 
 .sidebar-footer {
-  border-top: 1px solid #e0d7ff;
+  border-top: 1px solid var(--sidebar-border);
   padding-top: 10px;
 }
 
 .sidebar-footer button {
   background: none;
   border: none;
-  color: #5f4b8b;
+  color: var(--text-color);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -73,25 +73,25 @@
 }
 
 .sidebar-footer button:hover {
-  color: #9b5de5;
+  color: var(--primary-color);
 }
 
 .content {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
-  background: #fdfaff;
+  background: var(--section-bg);
 }
 
 .search-bar {
   display: flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid #d3bfff;
+  border: 1px solid var(--input-border);
   border-radius: 6px;
   padding: 8px;
   margin-bottom: 20px;
-  background: #ffffff;
+  background: var(--input-bg);
   position: sticky;
   top: 0;
   z-index: 5;
@@ -102,26 +102,27 @@
   outline: none;
   flex: 1;
   font-size: 14px;
-  color: #5f4b8b;
+  color: var(--text-color);
+  background: transparent;
 }
 
 .clear-search-btn {
   background: none;
   border: none;
   cursor: pointer;
-  color: #9b5de5;
+  color: var(--primary-color);
   display: flex;
   align-items: center;
   transition: color 0.2s ease;
 }
 
 .clear-search-btn:hover {
-  color: #7a42d1;
+  color: var(--primary-hover);
 }
 
 .section-title {
   font-weight: bold;
-  color: #5f4b8b;
+  color: var(--text-color);
   margin: 15px 0 8px;
   font-size: 16px;
 }
@@ -136,8 +137,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #ffffff;
-  border: 1px solid #e0d7ff;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
   border-radius: 6px;
   padding: 10px;
   transition: background 0.2s ease, transform 0.1s ease;
@@ -146,7 +147,7 @@
 }
 
 .folder-card:hover {
-  background: #f3e8ff;
+  background: var(--modal-bg);
   transform: translateY(-1px);
 }
 
@@ -159,7 +160,7 @@
 .folder-name {
   font-size: 14px;
   font-weight: 500;
-  color: #4b3869;
+  color: var(--text-color);
 }
 
 .right {
@@ -174,17 +175,14 @@
 
 .item-count {
   font-size: 13px;
-  color: #5f4b8b;
+  color: var(--text-color);
   font-weight: 500;
 }
 
 .file-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  max-width: 100%;
+  gap: 8px;
 }
 
 .file-actions button,
@@ -192,14 +190,14 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #5f4b8b;
+  color: var(--text-color);
   transition: color 0.2s ease;
   padding: 0;
 }
 
 .file-actions button:hover,
 .file-actions .MuiIconButton-root:hover {
-  color: #9b5de5;
+  color: var(--primary-color);
 }
 
 .file-actions svg {
@@ -227,40 +225,11 @@
   }
 }
 
-/* (Other styles remain unchanged — modals, dark mode, etc.) */
-
-
-/* Item count on far right of folder row */
-.item-count {
-  font-size: 13px;
-  color: #5f4b8b;
-  font-weight: 500;
-}
-
-/* Action buttons (view, edit, delete) */
-.file-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.file-actions button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #5f4b8b;
-  transition: color 0.2s ease;
-}
-
-.file-actions button:hover {
-  color: #9b5de5;
-}
-
 /* ------------------------- PLACEHOLDER TEXT ------------------------- */
 .placeholder-space {
   text-align: center;
   padding: 20px;
-  color: #8d77a5;
+  color: var(--text-color);
   font-size: 14px;
   font-style: italic;
   min-height: 50px;
@@ -281,12 +250,12 @@
 }
 
 .modal-content {
-  background: white;
+  background: var(--modal-bg);
   padding: 20px;
   border-radius: 8px;
   min-width: 320px;
   max-width: 400px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px var(--modal-shadow);
 }
 
 .modal-content input,
@@ -296,8 +265,10 @@
   margin-bottom: 10px;
   padding: 8px;
   font-size: 14px;
-  border: 1px solid #d3bfff;
+  border: 1px solid var(--input-border);
   border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--text-color);
 }
 
 .modal-actions {
@@ -308,8 +279,8 @@
 
 .modal-actions button {
   padding: 8px 12px;
-  background: #9b5de5;
-  color: white;
+  background: var(--primary-color);
+  color: var(--button-text);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -317,7 +288,7 @@
 }
 
 .modal-actions button:hover {
-  background: #7a42d1;
+  background: var(--primary-hover);
 }
 
 /* ------------------------- ANIMATIONS ------------------------- */
@@ -341,12 +312,12 @@
 .filter-section {
   margin-top: 20px;
   padding: 10px;
-  border-top: 1px solid #e0d7ff;
+  border-top: 1px solid var(--sidebar-border);
 }
 
 .filter-section h4 {
   font-size: 14px;
-  color: #5f4b8b;
+  color: var(--text-color);
   margin-bottom: 5px;
 }
 
@@ -354,9 +325,10 @@
   width: 100%;
   padding: 6px;
   border-radius: 4px;
-  border: 1px solid #d3bfff;
+  border: 1px solid var(--input-border);
   font-size: 14px;
-  color: #5f4b8b;
+  color: var(--text-color);
+  background: var(--input-bg);
 }
 
 /* ------------------------- BACK BUTTON ------------------------- */
@@ -365,8 +337,8 @@
   align-items: center;
   gap: 5px;
   padding: 6px 12px;
-  background: #9b5de5;
-  color: white;
+  background: var(--primary-color);
+  color: var(--button-text);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -375,28 +347,28 @@
 }
 
 .back-btn:hover {
-  background: #7a42d1;
+  background: var(--primary-hover);
 }
 
 /* ------------------------- NEW MENU DROPDOWN ------------------------- */
 .new-menu {
   display: flex;
   flex-direction: column;
-  gap: 10px; /* Space between each menu item */
-  background: #ffffff;
-  border: 1px solid #e0d7ff;
+  gap: 10px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
   border-radius: 8px;
   padding: 10px;
-  box-shadow: 0 4px 8px rgba(155, 93, 229, 0.1);
+  box-shadow: 0 4px 8px var(--modal-shadow);
   margin-top: 10px;
   position: absolute;
   z-index: 100;
 }
 
 .new-menu-item button {
-  background: #faf5ff;
+  background: var(--section-bg);
   border: none;
-  color: #5f4b8b;
+  color: var(--text-color);
   font-weight: bold;
   padding: 10px 16px;
   text-align: left;
@@ -407,11 +379,10 @@
 }
 
 .new-menu-item button:hover {
-  background: #e6dbff;
+  background: var(--modal-bg);
 }
 
-
-/* DARK MODE SUPPORT */
+/* ------------------------- DARK MODE SUPPORT ------------------------- */
 body.dark {
   --bg-main: #1e1b23;
   --bg-sidebar: #2c2533;
@@ -488,7 +459,7 @@ body.dark .modal-close {
   color: var(--primary-color);
 }
 
-/* Theme toggle button container */
+/* ------------------------- THEME TOGGLE ------------------------- */
 .theme-toggle-container {
   margin-top: 40px;
   display: flex;

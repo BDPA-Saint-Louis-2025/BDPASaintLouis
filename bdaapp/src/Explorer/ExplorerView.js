@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 
 import { jwtDecode } from 'jwt-decode';
-
+import LockIcon from '@mui/icons-material/Lock';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import FolderIcon from '@mui/icons-material/Folder';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import UploadIcon from '@mui/icons-material/Upload';
@@ -32,6 +33,7 @@ import './ExplorerView.css';
 function ExplorerView() {
   const [files, setFiles] = useState([]);
   const [folders, setFolders] = useState([]);
+  const [editingTags, setEditingTags] = useState({});
 
   const [currentFolderId, setCurrentFolderId] = useState(null);
   const [currentFolderName, setCurrentFolderName] = useState('My Drive');
@@ -43,6 +45,8 @@ function ExplorerView() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+const [tagInputs, setTagInputs] = useState({});
+
 
   const [filterType, setFilterType] = useState('all'); // all | file | folder
   const [sortOrder, setSortOrder] = useState('asc');   // asc | desc
@@ -72,6 +76,7 @@ const [updatedTags, setUpdatedTags] = useState([]);
 const [newFileName, setNewFileName] = useState('');
 const [filter, setFilter] = useState('all');
 const [sortOption, setSortOption] = useState('name');
+const [tagInput, setTagInput] = useState('');
 
  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
  const imageStyle = {
@@ -99,8 +104,18 @@ const { fileId } = useParams();
 const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   const decoded = token ? jwtDecode(token) : {};
 
+  useEffect(() => {
+  const storedTheme = localStorage.getItem('theme') || 'light';
+  document.body.classList.toggle('dark', storedTheme === 'dark');
+}, []);
+
+
+
   // Debounced search
   useEffect(() => {
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+console.log("Saved token:", token); // This must not be null
+
     const handler = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
     return () => clearTimeout(handler);
   }, [searchTerm]);
@@ -121,6 +136,33 @@ const closePrivacyModal = () => {
   setSelectedNode(null);
   setShowPrivacyModal(false);
 };
+
+const updateTags = async (fileId) => {
+  const newTag = prompt("Enter a new tag:");
+  if (!newTag) return;
+
+  try {
+    const res = await fetch(`http://localhost:5000/api/files/${fileId}/tags`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token") || sessionStorage.getItem("token")}`
+      },
+      body: JSON.stringify({ tags: [newTag] })
+    });
+
+    if (!res.ok) throw new Error("Failed to update tags");
+
+    const data = await res.json();
+    console.log("Tag added:", data.tags);
+    alert("Tag added: " + newTag);
+  } catch (err) {
+    console.error("[TAG UPDATE ERROR]", err);
+    alert("Error updating tags");
+  }
+};
+
+
 
 
 const fetchFiles = async (folderId, section) => {
@@ -408,7 +450,10 @@ const generateShareableLink = async (itemId) => {
   }
 };
 
+const token1 = localStorage.getItem('token') || sessionStorage.getItem('token');
 
+console.log("Saved token:", token1); // This must not be null
+console.log('[TOKEN USED FOR DELETE]', token1);
 
 const handleDelete = async (itemId) => {
   console.log('[DELETE ATTEMPT] Deleting ID:', itemId);
@@ -416,10 +461,12 @@ const handleDelete = async (itemId) => {
   if (!window.confirm('Are you sure you want to delete this item?')) return;
 
   try {
+
+    
     const res = await fetch(`http://localhost:5000/api/files/${itemId}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token1}`
       }
     });
 
@@ -651,6 +698,8 @@ const handleDelete = async (itemId) => {
               style={{ cursor: 'pointer', marginLeft: '8px' }}
               titleAccess="Edit File"
             />
+
+
                       
                       <button onClick={() => handleDelete(file._id)} title="Delete">
                         <DeleteIcon />
@@ -658,11 +707,25 @@ const handleDelete = async (itemId) => {
                        <IconButton onClick={() => { setSelectedNode(file); setShowShareModal(true);}} title="Share">  <ShareIcon />
                       </IconButton>
                         <DownloadIcon onClick={() => handleDownload(file._id)}>
-
                         </DownloadIcon>
+                      
+           
+
+<LocalOfferIcon onClick={() => updateTags(file._id, tagInputs[file._id])} />
+
+{file.tags && file.tags.length > 0 && (
+  <div className="tag-container">
+    {file.tags.map((tag, index) => (
+      <span className="tag" key={index}>{tag}</span>
+    ))}
+  </div>
+)}
+
                       <IconButton onClick={() => generateShareableLink(file._id)} title="Generate Link">
                        <LinkIcon />
                       </IconButton>
+
+
 
                     </div>
                   </div>
