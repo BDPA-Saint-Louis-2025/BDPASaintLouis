@@ -4,13 +4,27 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import CloseIcon from '@mui/icons-material/Close';
 import './Dashboard.css';
+import myImage from '../LoginScreen/bdpaLogo.png';
 
 function Dashboard() {
   const [userInfo, setUserInfo] = useState(null);
   const [storageUsed, setStorageUsed] = useState(0);
   const [message, setMessage] = useState('');
-
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+
+  const [isUsernameModalOpen, setIsUsernameModalOpen] = useState(false);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+
+  const [newUsername, setNewUsername] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [isEmailValid, setIsEmailValid] = useState(true);
+  const [shakeEmail, setShakeEmail] = useState(false);
+  const [shakePassword, setShakePassword] = useState(false);
+  const [shakeUsername, setShakeUsername] = useState(false);
 
   useEffect(() => {
     document.body.classList.toggle('dark', theme === 'dark');
@@ -18,20 +32,8 @@ function Dashboard() {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
-
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [newEmail, setNewEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isEmailValid, setIsEmailValid] = useState(true);
-  const [shakeEmail, setShakeEmail] = useState(false);
-  const [shakePassword, setShakePassword] = useState(false);
-  const [newUsername, setNewUsername] = useState('');
-const [shakeUsername, setShakeUsername] = useState(false);
-const [isUsernameModalOpen, setIsUsernameModalOpen] = useState(false);
 
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
@@ -48,34 +50,30 @@ const [isUsernameModalOpen, setIsUsernameModalOpen] = useState(false);
       }
     };
 
-const fetchStorage = async () => {
-  try {
-    const res = await fetch('http://localhost:5000/api/files/storage', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-      setStorageUsed(data.totalSize || 0);
-    } else {
-      console.error(data.message);
-    }
-  } catch (err) {
-    console.error('Error fetching storage:', err);
-  }
-};
-
+    const fetchStorage = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/files/storage', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setStorageUsed(data.totalSize || 0);
+        } else {
+          console.error(data.message);
+        }
+      } catch (err) {
+        console.error('Error fetching storage:', err);
+      }
+    };
 
     fetchUser();
     fetchStorage();
   }, [token]);
 
+  const isValidUsername = (username) => /^[a-zA-Z0-9_-]+$/.test(username);
   const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
   const hasSpecialChar = (password) => /[!@#$%^&*(),.?":{}|<>]/.test(password);
-  const isAlphanumericWithDashes = (password) =>
-    /^[a-zA-Z0-9-_!@#$%^&*(),.?":{}|<>]+$/.test(password);
+  const isAlphanumericWithDashes = (password) => /^[a-zA-Z0-9-_!@#$%^&*(),.?":{}|<>]+$/.test(password);
 
   const passwordStrength = (password) => {
     if (!hasSpecialChar(password) || !isAlphanumericWithDashes(password)) return 'invalid';
@@ -93,76 +91,62 @@ const fetchStorage = async () => {
       setUserInfo(data);
     } catch {}
   };
-const isValidUsername = (username) => /^[a-zA-Z0-9_-]+$/.test(username);
 
-  /** USERNAME **/
- const handleUpdateUsername = async () => {
-  if (!isValidUsername(newUsername)) {
-    setShakeUsername(true);
-    setTimeout(() => setShakeUsername(false), 500);
-    return setMessage('Username must be alphanumeric (dashes and underscores allowed).');
-  }
+  const handleUpdateUsername = async () => {
+    if (!isValidUsername(newUsername)) {
+      setShakeUsername(true);
+      setTimeout(() => setShakeUsername(false), 500);
+      return setMessage('Username must be alphanumeric (dashes and underscores allowed).');
+    }
 
-  try {
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/username', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ username: newUsername }),
+      });
 
-    const res = await fetch('http://localhost:5000/api/auth/username', {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`, 
-      },
-      body: JSON.stringify({ username: newUsername }),
-    });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage(data.message || 'Username updated');
+        setIsUsernameModalOpen(false);
+        reloadUserInfo();
+      } else {
+        setMessage(data.message || 'Username update failed');
+      }
+    } catch {
+      setMessage('Username update failed');
+    }
+  };
 
-    console.log(`Bearer token used: ${token}`);
-    const data = await res.json();
-    if (res.ok) {
-      setMessage(data.message || 'Username updated');
-      setIsUsernameModalOpen(false);
+  const handleUpdateEmail = async () => {
+    if (!isValidEmail(newEmail)) {
+      setIsEmailValid(false);
+      setShakeEmail(true);
+      setTimeout(() => setShakeEmail(false), 500);
+      return;
+    }
+    setIsEmailValid(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/email', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email: newEmail }),
+      });
+      const data = await res.json();
+      setMessage(data.message || 'Email updated');
+      setIsEmailModalOpen(false);
       reloadUserInfo();
-    } else {
-      setMessage(data.message || 'Username update failed');
+    } catch {
+      setMessage('Email update failed');
     }
-  } catch (err) {
-    setMessage('Username update failed');
-  }
-};
-
-
-  /** EMAIL **/
-const handleUpdateEmail = async (newEmail) => {
-  const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-
-  console.log("TOKEN BEING SENT: Bearer " + token);
-
-  if (!token) {
-    console.error("❌ No token provided to handleUpdateEmail");
-    return;
-  }
-
-  try {
-    const res = await fetch("http://localhost:5000/api/auth/email", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ email: newEmail }),
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-      console.log("✅ Email updated:", data.message);
-    } else {
-      console.error("❌ Error updating email:", data.message || data.error);
-    }
-  } catch (err) {
-    console.error("❌ Network error:", err);
-  }
-};
-
-
+  };
 
   const handleUpdatePassword = async () => {
     if (
@@ -175,13 +159,11 @@ const handleUpdateEmail = async (newEmail) => {
       return setMessage('Password must meet all requirements.');
     }
     try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-
       const res = await fetch('http://localhost:5000/api/auth/password', {
         method: 'PATCH',
         headers: {
-      'Content-Type': 'application/json',
-  Authorization: `Bearer ${token}`, 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ password: newPassword }),
       });
@@ -193,6 +175,12 @@ const handleUpdateEmail = async (newEmail) => {
     } catch {
       setMessage('Password update failed');
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = '/login';
   };
 
   const handleDeleteAccount = async () => {
@@ -213,7 +201,6 @@ const handleUpdateEmail = async (newEmail) => {
   };
 
   if (!userInfo) return <p>Loading user data...</p>;
-console.log("Loaded token:", localStorage.getItem("token") || sessionStorage.getItem("token"));
 
   return (
     <div className="drive-layout">
@@ -244,6 +231,7 @@ console.log("Loaded token:", localStorage.getItem("token") || sessionStorage.get
         <p><strong>Storage Used:</strong> {storageUsed} bytes</p>
 
         <div className="button-row">
+          <button className="primary-btn" onClick={() => setIsUsernameModalOpen(true)}>Edit Username</button>
           <button className="primary-btn" onClick={() => setIsEmailModalOpen(true)}>Edit Email</button>
           <button className="primary-btn" onClick={() => setIsPasswordModalOpen(true)}>Edit Password</button>
         </div>
@@ -253,10 +241,34 @@ console.log("Loaded token:", localStorage.getItem("token") || sessionStorage.get
           <button onClick={handleDeleteAccount} className="danger-btn">
             Delete My Account
           </button>
+
+          <div className="section">
+            <h3>Session</h3>
+            <button onClick={handleLogout} className="logout-btn">
+              Log Out
+            </button>
+          </div>
         </div>
 
         {message && <p className="success-message">{message}</p>}
       </main>
+
+      {isUsernameModalOpen && (
+        <Modal title="Edit Username" onClose={() => setIsUsernameModalOpen(false)}>
+          <input
+            type="text"
+            className={shakeUsername ? 'shake' : ''}
+            placeholder="Enter new username"
+            value={newUsername}
+            onChange={(e) => setNewUsername(e.target.value)}
+          />
+          <small>Must be alphanumeric (dashes and underscores allowed).</small>
+          <div className="modal-actions">
+            <button onClick={handleUpdateUsername}>Save</button>
+            <button className="cancel" onClick={() => setIsUsernameModalOpen(false)}>Cancel</button>
+          </div>
+        </Modal>
+      )}
 
       {isEmailModalOpen && (
         <Modal title="Edit Email" onClose={() => setIsEmailModalOpen(false)}>
@@ -269,9 +281,8 @@ console.log("Loaded token:", localStorage.getItem("token") || sessionStorage.get
           />
           {!isEmailValid && <div className="error-message">Invalid email. Try again with a real email.</div>}
           <div className="modal-actions">
-                <button onClick={() => handleUpdateEmail(newEmail)}>Save</button>
-
-                   <button className="cancel" onClick={() => setIsEmailModalOpen(false)}>Cancel</button>
+            <button onClick={handleUpdateEmail}>Save</button>
+            <button className="cancel" onClick={() => setIsEmailModalOpen(false)}>Cancel</button>
           </div>
         </Modal>
       )}

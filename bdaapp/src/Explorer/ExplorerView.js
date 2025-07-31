@@ -23,7 +23,10 @@ import ShareIcon from '@mui/icons-material/Share';
 import LinkIcon from '@mui/icons-material/Link';
 import CreateIcon from '@mui/icons-material/Create';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
+import myImage from '../LoginScreen/bdpaLogo.png'; // Ensure the path is correct
 import DownloadIcon from '@mui/icons-material/Download';
+
+
 
 import './ExplorerView.css';
 
@@ -74,6 +77,28 @@ const [newFileName, setNewFileName] = useState('');
 const [filter, setFilter] = useState('all');
 const [sortOption, setSortOption] = useState('name');
 const [tagInput, setTagInput] = useState('');
+
+ const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+ const imageStyle = {
+    position: 'fixed',
+    top: '10px',
+    right: '10px',
+    width: '50px',
+    height: '50px',
+    zIndex: 9999,
+  };
+
+
+  
+
+  useEffect(() => {
+    document.body.classList.toggle('dark', theme === 'dark');
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
 
 const { fileId } = useParams();
 const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -517,6 +542,7 @@ const handleDelete = async (itemId) => {
 
  return (
   <div className="drive-layout">
+    <img src={myImage} alt="Top Right Icon" style={imageStyle} />
     {/* SIDEBAR */}
     <aside className="sidebar">
       <button className="new-btn" onClick={() => setShowNewMenu((v) => !v)}>

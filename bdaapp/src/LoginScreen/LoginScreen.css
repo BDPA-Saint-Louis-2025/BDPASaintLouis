@@ -17,30 +17,31 @@
 }
 
 body.dark {
-  --bg-color: #1e1e2a;           /* Darker base background */
-  --text-color: #ffffff;         /* Bright white for all text */
-  --sidebar-bg: #2a1e2f;         /* Dark purple/pink-tinted background */
-  --sidebar-border: #a44583;     /* Border with soft pink tint */
-  --primary-color: #FA0787;      /* Main pink */
-  --primary-hover: #d90673;      /* Darker pink for hover */
-  --section-bg: #2e1b2b;         /* Dark surface with pinkish undertone */
-  --danger-color: #ff4d6d;       /* Soft red-pink for delete/danger */
-  --danger-hover: #d03456;       /* Darker danger hover */
-  --modal-bg: #341e2e;           /* Modal background with rose tint */
-  --modal-shadow: rgba(255, 20, 147, 0.15); /* Subtle pink glow */
-  --input-border: #fa5a9f;       /* Pinkish input border */
-  --input-bg: #3b2636;           /* Darker input background */
-  --button-text: #ffffff;        /* White text for buttons */
+  --bg-color: #1e1e2a;
+  --text-color: #ffffff;
+  --sidebar-bg: #2a1e2f;
+  --sidebar-border: #a44583;
+  --primary-color: #FA0787;
+  --primary-hover: #d90673;
+  --section-bg: #2e1b2b;
+  --danger-color: #ff4d6d;
+  --danger-hover: #d03456;
+  --modal-bg: #341e2e;
+  --modal-shadow: rgba(255, 20, 147, 0.15);
+  --input-border: #fa5a9f;
+  --input-bg: #3b2636;
+  --button-text: #ffffff;
 }
 
 .page-container {
   display: flex;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+  background: var(--bg-color);
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: var(--bg-color);
-  font-family: Arial, sans-serif;
   color: var(--text-color);
 }
 
@@ -192,4 +193,3 @@ button:hover {
   margin: 0;
   font-size: 16px;
 }
-

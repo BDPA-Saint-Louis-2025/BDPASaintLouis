@@ -1,4 +1,5 @@
-/* ------------------------- LAYOUT ------------------------- */
+/* ------------------------- UPDATED CSS ------------------------- */
+
 .drive-layout {
   display: flex;
   height: 100vh;
@@ -6,7 +7,6 @@
   background: var(--bg-color);
 }
 
-/* ------------------------- SIDEBAR ------------------------- */
 .sidebar {
   width: 240px;
   background: var(--sidebar-bg);
@@ -17,7 +17,6 @@
   justify-content: space-between;
 }
 
-/* "New" button - removed the "+" */
 .new-btn {
   background: var(--primary-color);
   color: var(--button-text);
@@ -35,7 +34,6 @@
   background: var(--primary-hover);
 }
 
-/* Navigation buttons (My Drive, Shared With Me, Recent) */
 .nav button {
   display: flex;
   align-items: center;
@@ -58,7 +56,6 @@
   font-weight: bold;
 }
 
-/* Footer - Dashboard button */
 .sidebar-footer {
   border-top: 1px solid var(--sidebar-border);
   padding-top: 10px;
@@ -79,7 +76,6 @@
   color: var(--primary-color);
 }
 
-/* ------------------------- MAIN CONTENT ------------------------- */
 .content {
   flex: 1;
   padding: 20px;
@@ -87,7 +83,6 @@
   background: var(--section-bg);
 }
 
-/* ------------------------- SEARCH BAR ------------------------- */
 .search-bar {
   display: flex;
   align-items: center;
@@ -125,7 +120,6 @@
   color: var(--primary-hover);
 }
 
-/* ------------------------- SECTION TITLES ------------------------- */
 .section-title {
   font-weight: bold;
   color: var(--text-color);
@@ -133,7 +127,6 @@
   font-size: 16px;
 }
 
-/* ------------------------- FOLDER/FILE LISTING ------------------------- */
 .folder-row {
   display: flex;
   flex-direction: column;
@@ -150,6 +143,7 @@
   padding: 10px;
   transition: background 0.2s ease, transform 0.1s ease;
   cursor: pointer;
+  flex-wrap: wrap;
 }
 
 .folder-card:hover {
@@ -173,32 +167,62 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex: 1;
+  margin-left: auto;
 }
 
-/* Item count on far right of folder row */
 .item-count {
   font-size: 13px;
   color: var(--text-color);
   font-weight: 500;
 }
 
-/* Action buttons (view, edit, delete) */
 .file-actions {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.file-actions button {
+.file-actions button,
+.file-actions .MuiIconButton-root {
   background: none;
   border: none;
   cursor: pointer;
   color: var(--text-color);
   transition: color 0.2s ease;
+  padding: 0;
 }
 
-.file-actions button:hover {
+.file-actions button:hover,
+.file-actions .MuiIconButton-root:hover {
   color: var(--primary-color);
+}
+
+.file-actions svg {
+  font-size: 20px;
+}
+
+@media (max-width: 768px) {
+  .file-actions {
+    justify-content: space-between;
+    gap: 4px;
+  }
+  .item-count {
+    display: none;
+  }
+  .folder-name {
+    font-size: 13px;
+  }
+  .folder-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .right {
+    justify-content: flex-start;
+    margin-left: 0;
+  }
 }
 
 /* ------------------------- PLACEHOLDER TEXT ------------------------- */
@@ -356,4 +380,104 @@
 
 .new-menu-item button:hover {
   background: var(--modal-bg);
+}
+
+/* ------------------------- DARK MODE SUPPORT ------------------------- */
+body.dark {
+  --bg-main: #1e1b23;
+  --bg-sidebar: #2c2533;
+  --bg-section: #2e2a3a;
+  --text-main: #fdfaff;
+  --text-secondary: #f8c3ff;
+  --primary-color: #ff70c0;
+  --primary-hover: #e058a8;
+  --modal-bg: #392f45;
+  --modal-border: #5f4b8b;
+  --danger: #ff6b6b;
+}
+
+body.dark .drive-layout {
+  background: var(--bg-main);
+}
+
+body.dark .sidebar {
+  background: var(--bg-sidebar);
+  border-right: 1px solid #5f4b8b;
+}
+
+body.dark .nav button,
+body.dark .sidebar-footer button {
+  color: var(--text-secondary);
+}
+
+body.dark .nav button:hover,
+body.dark .sidebar-footer button:hover,
+body.dark .nav .active,
+body.dark .sidebar-footer .active {
+  color: var(--primary-color);
+}
+
+body.dark .content {
+  background: var(--bg-main);
+  color: var(--text-main);
+}
+
+body.dark .section {
+  background: var(--bg-section);
+  border-color: var(--modal-border);
+}
+
+body.dark .section h3 {
+  color: var(--text-secondary);
+}
+
+body.dark .primary-btn,
+body.dark .modal-actions button {
+  background: var(--primary-color);
+  color: white;
+}
+
+body.dark .primary-btn:hover,
+body.dark .modal-actions button:hover {
+  background: var(--primary-hover);
+}
+
+body.dark .danger-zone {
+  border-color: var(--danger);
+}
+
+body.dark .danger-btn {
+  background: var(--danger);
+}
+
+body.dark .modal-content {
+  background: var(--modal-bg);
+  color: var(--text-main);
+}
+
+body.dark .modal-close {
+  color: var(--primary-color);
+}
+
+/* ------------------------- THEME TOGGLE ------------------------- */
+.theme-toggle-container {
+  margin-top: 40px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.theme-toggle-container button {
+  background: var(--primary-color);
+  color: white;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.theme-toggle-container button:hover {
+  background: var(--primary-hover);
 }
