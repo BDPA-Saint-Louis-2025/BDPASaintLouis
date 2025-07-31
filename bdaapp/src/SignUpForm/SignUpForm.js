@@ -10,6 +10,7 @@ const SignUpForm = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+    const navigate = useNavigate();
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
 
   useEffect(() => {
@@ -41,6 +42,7 @@ const SignUpForm = () => {
         setError(data.message || "Something went wrong");
       } else {
         setSuccess("Registered successfully!");
+        navigate("/explorer");
         setError('');
       }
     } catch (err) {

@@ -288,6 +288,26 @@ router.get('/search', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// PATCH /api/files/:id/tags → Adds a new tag to a file
+// PATCH /api/files/:id/tags
+router.patch('/:id/tags', authMiddleware, async (req, res) => {
+  try {
+    const file = await FileOrFolder.findById(req.params.id);
+    if (!file) return res.status(404).send('File not found');
+
+    const { tags } = req.body;
+    file.tags = tags;
+    await file.save();
+
+    res.status(200).json({ message: 'Tags updated', tags: file.tags });
+  } catch (err) {
+    console.error('[TAG UPDATE ERROR]', err);
+    res.status(500).send('Failed to update tags');
+  }
+});
+
+
 router.patch('/:id/metadata', authMiddleware, async (req, res) => {
   const { name, tags, isPublic, clientId } = req.body;
 
@@ -695,22 +715,25 @@ router.get('/download/:id', authMiddleware, async (req, res) => {
     const file = await FileOrFolder.findById(req.params.id);
     if (!file) return res.status(404).send('File not found');
 
-    if (!file.nameOnDisk) {
-      console.error('[DOWNLOAD ERROR] nameOnDisk is missing:', file);
-      return res.status(400).send('No uploaded file found on disk');
+    // If it's a saved (uploaded) file with nameOnDisk
+    if (file.nameOnDisk) {
+      const filePath = path.join(__dirname, '..', 'uploads', file.nameOnDisk);
+      if (!fs.existsSync(filePath)) {
+        console.error('[DOWNLOAD ERROR] File missing:', filePath);
+        return res.status(404).send('File not found on disk');
+      }
+
+      const mimeType = mime.lookup(file.name) || 'application/octet-stream';
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
+      return fs.createReadStream(filePath).pipe(res);
     }
 
-    const filePath = path.join(__dirname, '..', 'uploads', file.nameOnDisk);
-    if (!fs.existsSync(filePath)) {
-      console.error('[DOWNLOAD ERROR] File does not exist on disk:', filePath);
-      return res.status(404).send('File not found on disk');
-    }
+    // Else it's a file created in the app (e.g., markdown)
+    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Content-Disposition', `attachment; filename="${file.name || 'download.txt'}"`);
+    return res.send(file.content || '');
 
-    const mimeType = mime.lookup(file.name) || 'application/octet-stream';
-    res.setHeader('Content-Type', mimeType);
-    res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
-
-    fs.createReadStream(filePath).pipe(res);
   } catch (err) {
     console.error('[DOWNLOAD ERROR]', err);
     res.status(500).send('Download failed');
