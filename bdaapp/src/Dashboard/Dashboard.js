@@ -226,8 +226,7 @@ function Dashboard() {
         </button>
 
         <h2>Dashboard</h2>
-        <p><strong>Username:</strong> {userInfo.username}</p>
-        <p><strong>Email:</strong> {userInfo.email}</p>
+
         <p><strong>Storage Used:</strong> {storageUsed} bytes</p>
 
         <div className="button-row">
