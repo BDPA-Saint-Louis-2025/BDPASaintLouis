@@ -119,12 +119,14 @@ function LoginScreen() {
             <button className="primary-btn" onClick={toggleTheme}>
               Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode
             </button>
+            <img src={myImage} alt="Top Right Icon" style={imageStyle} />
           </div>
         </div>
-
+        {/*
         <div className="right-column">
-          <img src={myImage} alt="Top Right Icon" style={imageStyle} />
+          used to have image here
         </div>
+        */}
       </div>
     </div>
   );
