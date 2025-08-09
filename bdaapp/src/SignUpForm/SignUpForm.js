@@ -145,11 +145,6 @@ const SignUpForm = () => {
             </button>
           </div>
         </div>
-        {/*
-        <div className="right-column">
-           Optional image or promo content
-        </div>
-        */}
       </div>
 
       {/* Password strength popup */}
