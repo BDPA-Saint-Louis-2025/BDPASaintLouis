@@ -49,11 +49,13 @@ const FileOptionsModal = ({ open, file, onClose, token, onUpdate }) => {
         style: {
           borderRadius: '12px',
           padding: '20px',
-          backgroundColor: '#fff0ff'
+          backgroundColor: 'var(--modal-bg)',
+          boxShadow: `0 4px 12px var(--modal-shadow)`,
+          color: 'var(--text-color)'
         }
       }}
     >
-      <DialogTitle style={{ color: '#5f4b8b', fontWeight: 'bold' }}>
+      <DialogTitle style={{ color: 'var(--text-color)', fontWeight: 'bold' }}>
         Options for "{file.name}"
       </DialogTitle>
 
@@ -62,8 +64,8 @@ const FileOptionsModal = ({ open, file, onClose, token, onUpdate }) => {
           fullWidth
           variant="contained"
           style={{
-            backgroundColor: file.isPublic ? '#f8c291' : '#9b5de5',
-            color: 'white',
+            backgroundColor: file.isPublic ? 'var(--danger-color)' : 'var(--primary-color)',
+            color: 'var(--button-text)',
             marginBottom: '16px'
           }}
           onClick={handleTogglePrivacy}
@@ -75,7 +77,7 @@ const FileOptionsModal = ({ open, file, onClose, token, onUpdate }) => {
           <Box mt={2}>
             <Typography
               variant="body2"
-              style={{ color: '#4b3869', marginBottom: '6px', fontWeight: 500 }}
+              style={{ color: 'var(--text-color)', marginBottom: '6px', fontWeight: 500 }}
             >
               Public Link:
             </Typography>
@@ -85,16 +87,21 @@ const FileOptionsModal = ({ open, file, onClose, token, onUpdate }) => {
               value={publicLink}
               InputProps={{
                 readOnly: true,
-                style: { fontSize: '14px', color: '#5f4b8b' },
+                style: {
+                  fontSize: '14px',
+                  color: 'var(--text-color)',
+                  backgroundColor: 'var(--input-bg)',
+                  borderRadius: '6px',
+                  paddingRight: 0
+                },
                 endAdornment: (
                   <IconButton onClick={() => navigator.clipboard.writeText(publicLink)}>
-                    <ContentCopyIcon style={{ color: '#9b5de5' }} />
+                    <ContentCopyIcon style={{ color: 'var(--primary-color)' }} />
                   </IconButton>
                 )
               }}
               variant="outlined"
               size="small"
-              sx={{ backgroundColor: '#fdfaff', borderRadius: 1 }}
             />
           </Box>
         )}
@@ -104,8 +111,8 @@ const FileOptionsModal = ({ open, file, onClose, token, onUpdate }) => {
         <Button
           onClick={onClose}
           style={{
-            backgroundColor: '#d3bfff',
-            color: '#4b3869',
+            backgroundColor: 'var(--input-border)',
+            color: 'var(--text-color)',
             fontWeight: 500
           }}
         >

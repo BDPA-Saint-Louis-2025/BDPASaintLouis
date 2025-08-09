@@ -7,7 +7,15 @@ const fs = require('fs');
 const User = require('../models/User'); 
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
+const mimeTypes = {
+  txt: 'text/plain',
+  pdf: 'application/pdf',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  md: 'text/markdown',
+};
 
+const mime = require('mime-types');
 
 
 
@@ -16,6 +24,20 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 
 
+// Helper: Ensure Recycle Bin exists or create it
+async function ensureRecycleBin(userId) {
+  let bin = await FileOrFolder.findOne({ owner: userId, name: 'Recycle Bin', type: 'folder' });
+  if (!bin) {
+    bin = new FileOrFolder({
+      name: 'Recycle Bin',
+      type: 'folder',
+      owner: userId,
+      isPublic: false
+    });
+    await bin.save();
+  }
+  return bin;
+}
 // File Upload
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -45,62 +67,69 @@ const hasPermission = (file, user) => {
   );
 };
 
-async function getOrCreateRecycleBin(userId) {
-  let bin = await FileOrFolder.findOne({ 
-    name: "Recycle Bin", 
-    type: "folder", 
-    parent: null, 
-    owner: userId 
-  });
+async function deleteRecursively(fileId) {
+  const item = await FileOrFolder.findById(fileId);
+  if (!item) return;
 
-  if (!bin) {
-    bin = new FileOrFolder({
-      name: "Recycle Bin",
-      type: "folder",
-      parent: null,
-      owner: userId,
-      tags: [],
-      permissions: {}, // no permissions
-    });
-    await bin.save();
+  if (item.type === 'folder') {
+    const children = await FileOrFolder.find({ parent: item._id });
+    for (const child of children) {
+      await deleteRecursively(child._id);
+    }
   }
 
-  return bin;
+  await FileOrFolder.deleteOne({ _id: item._id });
 }
+// DELETE file or folder (soft delete or permanent delete from Recycle Bin)
+router.delete('/:id', authMiddleware, async (req, res) => {
+  const fileId = req.params.id;
 
-router.delete("/:id", authMiddleware, async (req, res) => {
   try {
-    const node = await FileOrFolder.findById(req.params.id);
-    if (!node) return res.status(404).json({ error: "Node not found" });
+    const file = await FileOrFolder.findById(fileId);
+    if (!file) return res.status(404).json({ error: 'File or folder not found' });
 
-    const isOwner = node.owner.equals(req.user._id);
-    const canUnshare = node.permissions?.[req.user.username];
-const canEdit = node.permissions?.[req.user.username] === 'edit';
-    // Can't delete others' stuff
-    if (!isOwner && !canUnshare) {
-      return res.status(403).json({ error: "Not authorized" });
-    }
-    
-if (!isOwner && !canEdit) {
-  return res.status(403).json({ error: "Not authorized" });
-}
-
-    // Recycle Bin itself is protected
-    if (node.name === "Recycle Bin" && node.parent === null) {
-      return res.status(403).json({ error: "Cannot delete the Recycle Bin folder" });
+    if (file.owner.toString() !== req.user.id) {
+      return res.status(403).json({ error: 'Not authorized' });
     }
 
-    // Soft delete → move to bin
-    const bin = await getOrCreateRecycleBin(req.user._id);
-    node.parent = bin._id;
-    await node.save();
+    // Check if it's in the Recycle Bin
+    const recycleBin = await FileOrFolder.findOne({
+      name: 'Recycle Bin',
+      parent: null,
+      owner: req.user.id
+    });
 
-    res.json({ message: "Moved to Recycle Bin" });
+    const isInRecycleBin = recycleBin && file.parent?.toString() === recycleBin._id.toString();
+
+    if (isInRecycleBin) {
+      await deleteRecursively(file._id);
+      return res.status(200).json({ message: 'Permanently deleted from Recycle Bin' });
+    }
+
+    // Otherwise: move to Recycle Bin (soft delete)
+    let bin = recycleBin;
+    if (!bin) {
+      bin = new FileOrFolder({
+        name: 'Recycle Bin',
+        type: 'folder',
+        parent: null,
+        owner: req.user.id,
+        isPublic: false
+      });
+      await bin.save();
+    }
+
+    file.parent = bin._id;
+    await file.save();
+
+    res.status(200).json({ message: 'Moved to Recycle Bin' });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error moving to Recycle Bin" });
+    console.error('[DELETE ROUTE ERROR]', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 router.delete("/:id/hard", authMiddleware, async (req, res) => {
   try {
@@ -259,6 +288,26 @@ router.get('/search', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// PATCH /api/files/:id/tags → Adds a new tag to a file
+// PATCH /api/files/:id/tags
+router.patch('/:id/tags', authMiddleware, async (req, res) => {
+  try {
+    const file = await FileOrFolder.findById(req.params.id);
+    if (!file) return res.status(404).send('File not found');
+
+    const { tags } = req.body;
+    file.tags = tags;
+    await file.save();
+
+    res.status(200).json({ message: 'Tags updated', tags: file.tags });
+  } catch (err) {
+    console.error('[TAG UPDATE ERROR]', err);
+    res.status(500).send('Failed to update tags');
+  }
+});
+
+
 router.patch('/:id/metadata', authMiddleware, async (req, res) => {
   const { name, tags, isPublic, clientId } = req.body;
 
@@ -427,32 +476,40 @@ router.put('/:id', authMiddleware, async (req, res) => {
 });
 
 // DELETE /api/files/:id
-router.delete("/:id", authMiddleware, async (req, res) => {
-  console.log('[DELETE ENTRY] HIT route with ID:', req.params.id);
+// DELETE route
+router.delete('/files/:id', authMiddleware, async (req, res) => {
+  
+  console.log('[DELETE] User:', req.user.id);
 
   try {
-    const node = await FileOrFolder.findById(req.params.id);
-    if (!node) return res.status(404).json({ error: "Node not found" });
+    const file = await FileOrFolder.findById(req.params.id);
+    if (!file) return res.status(404).json({ error: 'File not found' });
+console.log('[DELETE] Owner:', file.owner.toString());
+console.log('[DELETE] Permissions:', file.permissions);
+    const userId = req.user.id;
 
-    const fileOwner = node.owner?.toString();
-    const reqUserId = req.user.id; // ✅ correct field
+    // Check ownership or edit permission
+    const isOwner = file.owner.toString() === userId;
+    const hasEditPermission = file.permissions?.get(userId) === 'edit';
 
-    console.log('[DELETE DEBUG]', {
-      fileId: node._id,
-      fileOwner,
-      reqUserId,
-      match: fileOwner === reqUserId
-    });
-
-    if (fileOwner !== reqUserId) {
-      return res.status(403).json({ error: "Not authorized" });
+    if (!isOwner && !hasEditPermission) {
+      return res.status(403).json({ error: 'Not authorized' });
     }
 
-    await node.deleteOne();
-    res.json({ message: "Deleted" });
+    // Prevent Recycle Bin itself from being deleted
+    if (file.name === 'Recycle Bin' && file.type === 'folder') {
+      return res.status(400).json({ error: 'Recycle Bin cannot be deleted' });
+    }
+
+    // Move to Recycle Bin (soft delete)
+    const recycleBin = await ensureRecycleBin(file.owner);
+    file.parent = recycleBin._id;
+    await file.save();
+
+    res.status(200).json({ message: 'File moved to Recycle Bin' });
   } catch (err) {
     console.error('[DELETE ERROR]', err);
-    res.status(500).json({ error: "Delete failed" });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -633,16 +690,17 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req, res) =
   const { parent } = req.body;
   if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
 
-  const newFile = new FileOrFolder({
-    name: req.file.originalname,
-    type: 'file',
-    content: '', // Optionally read content
-    owner: req.user.id,
-    nameOnDisk: req.file.filename,
-    parent: parent || null,
-    size: req.file.size,
-    uploadPath: req.file.path
-  });
+ const newFile = new FileOrFolder({
+  name: req.file.originalname,
+  type: 'file',
+  content: '',
+  owner: req.user.id,
+  nameOnDisk: path.basename(req.file.path),
+  parent: parent || null,
+  size: req.file.size,
+  uploadPath: req.file.path,
+  mimeType: mime.lookup(req.file.originalname) || 'application/octet-stream'
+});
 
   await newFile.save();
   res.status(201).json(newFile);
@@ -650,38 +708,51 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req, res) =
 
 
 
-
 // Download Route
+
 router.get('/download/:id', authMiddleware, async (req, res) => {
   try {
     const file = await FileOrFolder.findById(req.params.id);
     if (!file) return res.status(404).send('File not found');
 
-    if (file.content !== undefined && file.content !== null) {
-      // Text-based file stored in Mongo
-      const buffer = Buffer.from(file.content, 'utf-8');
-      res.set({
-        'Content-Disposition': `attachment; filename="${file.name}.txt"`,
-        'Content-Type': 'text/plain',
-      });
-      return res.send(buffer);
+    // If it's a saved (uploaded) file with nameOnDisk
+    if (file.nameOnDisk) {
+      const filePath = path.join(__dirname, '..', 'uploads', file.nameOnDisk);
+      if (!fs.existsSync(filePath)) {
+        console.error('[DOWNLOAD ERROR] File missing:', filePath);
+        return res.status(404).send('File not found on disk');
+      }
+
+      const mimeType = mime.lookup(file.name) || 'application/octet-stream';
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
+      return fs.createReadStream(filePath).pipe(res);
     }
 
-    if (!file.nameOnDisk) {
-      return res.status(400).send('No file uploaded for this entry');
-    }
+    // Else it's a file created in the app (e.g., markdown)
+    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Content-Disposition', `attachment; filename="${file.name || 'download.txt'}"`);
+    return res.send(file.content || '');
 
-    const filePath = path.join(__dirname, '..', 'uploads', file.nameOnDisk);
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).send('File not found on disk');
-    }
-
-    res.download(filePath, file.name);
   } catch (err) {
     console.error('[DOWNLOAD ERROR]', err);
     res.status(500).send('Download failed');
   }
 });
+
+
+// Helper: infer content-type from extension
+function getMimeType(ext) {
+  switch (ext.toLowerCase()) {
+    case '.pdf': return 'application/pdf';
+    case '.txt': return 'text/plain';
+    case '.xlsx': return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    case '.docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    case '.md': return 'text/markdown';
+    case '.json': return 'application/json';
+    default: return 'application/octet-stream';
+  }
+}
 
 
 // GET public file by link ID

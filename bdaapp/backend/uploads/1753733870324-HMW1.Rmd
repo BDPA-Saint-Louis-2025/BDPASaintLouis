@@ -1,0 +1,119 @@
+---
+title: "Homework1"
+author: "Daniel Awodeyi"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+---
+
+1.1
+```{r}
+x <- c(1,2,3)
+y <- c(6,5,4)
+
+x*2
+
+x*y
+
+x[1]*y[2]
+
+```
+
+1.4
+```{r cars}
+p<-seq(from=0, to =1, by=.2)
+plot(p, p* (p-1))
+p <- seq(from = 0, to = 1, by = 0.01)
+plot(p, p * (1 - p))
+
+```
+1.7
+```{r}
+?rivers
+mean(rivers)
+sd(rivers)
+hist(rivers)
+summary(rivers)
+rivers[rivers > 1000]
+```
+1.9
+
+```{r}
+table(state.region)
+state.name[state.area < 10000]
+state.name[which.min(state.center$y)]
+
+
+
+
+
+
+
+
+```
+1.10
+```{r}
+mtcars[mtcars$gear == 4, ]
+mtcars[mtcars$disp > 150 & mtcars$mpg > 20, ]
+mtcars[mtcars$gear == 4 & mtcars$am == 1, ]
+mtcars[mtcars$gear == 4 | mtcars$am == 1, ]
+mean(mtcars$mpg[mtcars$carb == 2])
+
+```
+
+1.12
+```{r}
+library(fosdata)
+str(hot_dogs)
+unique(hot_dogs$type)
+max(hot_dogs$sodium, na.rm = TRUE)
+mean(hot_dogs$calories[hot_dogs$type == "Beef"], na.rm = TRUE)
+
+
+
+
+```
+
+1.13
+```{r}
+library(HistData)
+DrinksWages$trade[which.min(DrinksWages$wage)]
+sum(DrinksWages$n)
+total_wage <- sum(DrinksWages$wage * DrinksWages$n)
+total_workers <- sum(DrinksWages$n)
+mean_wage <- total_wage / total_workers
+
+
+
+
+```
+
+1.15
+```{r}
+library(fosdata)
+
+pass_count <- sum(bechdel$clean_test == "ok")
+total_count <- nrow(bechdel)
+percentage_pass <- (pass_count / total_count) * 100
+percentage_pass
+
+table(bechdel$year)
+
+
+movies_by_year <- table(bechdel$year)
+most_movies_year <- names(movies_by_year)[which.max(movies_by_year)]
+most_movies_year
+
+
+length(unique(bechdel$clean_test))
+
+pass_df <- subset(bechdel, clean_test == "ok")
+
+no_missing_domgross <- subset(bechdel, !is.na(domgross))
+
+
+
+
+
+```

@@ -1,64 +1,50 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+// src/ForgotPassword.js
+import React, { useState } from 'react';
 
-function ResetPassword() {
-  const { token } = useParams();
-  const [password, setPassword] = useState('');
-  const [status, setStatus] = useState('');
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // Validate the token on mount
-    const validate = async () => {
-      const res = await fetch(`http://localhost:5000/api/auth/reset-password/${token}`);
-      const data = await res.json();
-      if (res.ok) {
-        setStatus('valid');
-      } else {
-        setStatus('invalid');
-      }
-    };
-    validate();
-  }, [token]);
+function ForgotPassword() {
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch(`http://localhost:5000/api/auth/reset-password/${token}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password })
-    });
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (res.ok) {
-      alert('Password reset successfully. You can now log in.');
-      navigate('/login');
-    } else {
-      alert(data.message);
+      if (!res.ok) throw new Error(data.error || 'Error sending reset email');
+      setMessage('Reset link sent to your email!');
+      setError('');
+    } catch (err) {
+      console.error(err);
+      setMessage('');
+      setError(err.message || 'Something went wrong');
     }
   };
 
-  if (status === 'invalid') {
-    return <div style={{ padding: 20 }}><h2>Invalid or expired link</h2></div>;
-  }
-
   return (
-    <div style={{ padding: 20 }}>
+    <div className="container">
       <h2>Reset Your Password</h2>
       <form onSubmit={handleSubmit}>
         <input
-          type="password"
-          placeholder="Enter new password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          type="email"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <button type="submit">Reset Password</button>
+        <button type="submit">Send Reset Link</button>
       </form>
+      {message && <p style={{ color: 'green' }}>{message}</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
   );
 }
 
-export default ResetPassword;
+export default ForgotPassword;

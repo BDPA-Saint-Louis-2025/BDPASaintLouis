@@ -2,24 +2,28 @@
 
 .drive-layout {
   display: flex;
-  height: 100vh;
+  height: 100vh; /* kept */
+  min-height: 100svh; /* ADDED: iOS safe viewport height */
   font-family: Arial, sans-serif;
-  background: #faf5ff;
+  background: var(--bg-color);
+  padding-bottom: env(safe-area-inset-bottom); /* ADDED */
 }
 
 .sidebar {
   width: 240px;
-  background: #ffffff;
-  border-right: 1px solid #e0d7ff;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
   padding: 10px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  min-width: 0; /* ADDED: allow child truncation */
+  max-width: 100%; /* ADDED */
 }
 
 .new-btn {
-  background: #9b5de5;
-  color: white;
+  background: var(--primary-color);
+  color: var(--button-text);
   border: none;
   padding: 12px;
   border-radius: 8px;
@@ -31,7 +35,7 @@
 }
 
 .new-btn:hover {
-  background: #7a42d1;
+  background: var(--primary-hover);
 }
 
 .nav button {
@@ -43,28 +47,28 @@
   padding: 10px 0;
   cursor: pointer;
   font-size: 14px;
-  color: #5f4b8b;
+  color: var(--text-color);
   transition: color 0.2s ease;
 }
 
 .nav button:hover {
-  color: #9b5de5;
+  color: var(--primary-color);
 }
 
 .nav .active {
-  color: #9b5de5;
+  color: var(--primary-color);
   font-weight: bold;
 }
 
 .sidebar-footer {
-  border-top: 1px solid #e0d7ff;
+  border-top: 1px solid var(--sidebar-border);
   padding-top: 10px;
 }
 
 .sidebar-footer button {
   background: none;
   border: none;
-  color: #5f4b8b;
+  color: var(--text-color);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -73,25 +77,28 @@
 }
 
 .sidebar-footer button:hover {
-  color: #9b5de5;
+  color: var(--primary-color);
 }
 
 .content {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
-  background: #fdfaff;
+  background: var(--section-bg);
+  min-width: 0;           /* ADDED: critical for ellipsis inside */
+  max-width: 100%;        /* ADDED */
+  overflow-x: hidden;     /* ADDED: stop sideways scroll from spills */
 }
 
 .search-bar {
   display: flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid #d3bfff;
+  border: 1px solid var(--input-border);
   border-radius: 6px;
   padding: 8px;
   margin-bottom: 20px;
-  background: #ffffff;
+  background: var(--input-bg);
   position: sticky;
   top: 0;
   z-index: 5;
@@ -102,26 +109,28 @@
   outline: none;
   flex: 1;
   font-size: 14px;
-  color: #5f4b8b;
+  color: var(--text-color);
+  background: transparent;
+  min-width: 0; /* ADDED */
 }
 
 .clear-search-btn {
   background: none;
   border: none;
   cursor: pointer;
-  color: #9b5de5;
+  color: var(--primary-color);
   display: flex;
   align-items: center;
   transition: color 0.2s ease;
 }
 
 .clear-search-btn:hover {
-  color: #7a42d1;
+  color: var(--primary-hover);
 }
 
 .section-title {
   font-weight: bold;
-  color: #5f4b8b;
+  color: var(--text-color);
   margin: 15px 0 8px;
   font-size: 16px;
 }
@@ -132,36 +141,48 @@
   gap: 10px;
 }
 
+/* Card container */
 .folder-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #ffffff;
-  border: 1px solid #e0d7ff;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
   border-radius: 6px;
   padding: 10px;
   transition: background 0.2s ease, transform 0.1s ease;
   cursor: pointer;
   flex-wrap: wrap;
+  min-width: 0;     /* ADDED */
+  max-width: 100%;  /* ADDED */
 }
 
 .folder-card:hover {
-  background: #f3e8ff;
+  background: var(--modal-bg);
   transform: translateY(-1px);
 }
 
+/* Left content (icon + name) */
 .left {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;   /* ADDED: so name can ellipsis */
 }
 
+/* Name — now truncates instead of spilling */
 .folder-name {
   font-size: 14px;
   font-weight: 500;
-  color: #4b3869;
+  color: var(--text-color);
+  min-width: 0;             /* ADDED */
+  max-width: 100%;          /* ADDED */
+  overflow: hidden;         /* ADDED */
+  text-overflow: ellipsis;  /* ADDED */
+  white-space: nowrap;      /* ADDED */
 }
 
+/* Right side (actions) */
 .right {
   display: flex;
   align-items: center;
@@ -170,40 +191,67 @@
   justify-content: flex-end;
   flex: 1;
   margin-left: auto;
+  min-width: 0; /* ADDED */
 }
 
 .item-count {
   font-size: 13px;
-  color: #5f4b8b;
+  color: var(--text-color);
   font-weight: 500;
 }
 
 .file-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  max-width: 100%;
+  gap: 8px;
+  flex-wrap: wrap;       /* ADDED: wrap instead of pushing layout */
+  min-width: 0;          /* ADDED */
 }
 
+/* Icon buttons */
 .file-actions button,
 .file-actions .MuiIconButton-root {
   background: none;
   border: none;
   cursor: pointer;
-  color: #5f4b8b;
+  color: var(--text-color);
   transition: color 0.2s ease;
   padding: 0;
+  min-width: 44px;       /* ADDED: accessible tap target */
+  min-height: 44px;      /* ADDED */
+  display: inline-flex;  /* ADDED */
+  align-items: center;   /* ADDED */
+  justify-content: center; /* ADDED */
 }
 
 .file-actions button:hover,
 .file-actions .MuiIconButton-root:hover {
-  color: #9b5de5;
+  color: var(--primary-color);
 }
 
 .file-actions svg {
   font-size: 20px;
+}
+
+/* Tags container — wrap nicely */
+.tag-container {            /* ADDED */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.tag {                      /* ADDED */
+  background: var(--modal-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 12px;
+  color: var(--text-color);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (max-width: 768px) {
@@ -227,40 +275,11 @@
   }
 }
 
-/* (Other styles remain unchanged — modals, dark mode, etc.) */
-
-
-/* Item count on far right of folder row */
-.item-count {
-  font-size: 13px;
-  color: #5f4b8b;
-  font-weight: 500;
-}
-
-/* Action buttons (view, edit, delete) */
-.file-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.file-actions button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #5f4b8b;
-  transition: color 0.2s ease;
-}
-
-.file-actions button:hover {
-  color: #9b5de5;
-}
-
 /* ------------------------- PLACEHOLDER TEXT ------------------------- */
 .placeholder-space {
   text-align: center;
   padding: 20px;
-  color: #8d77a5;
+  color: var(--text-color);
   font-size: 14px;
   font-style: italic;
   min-height: 50px;
@@ -281,12 +300,12 @@
 }
 
 .modal-content {
-  background: white;
+  background: var(--modal-bg);
   padding: 20px;
   border-radius: 8px;
   min-width: 320px;
   max-width: 400px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px var(--modal-shadow);
 }
 
 .modal-content input,
@@ -296,8 +315,10 @@
   margin-bottom: 10px;
   padding: 8px;
   font-size: 14px;
-  border: 1px solid #d3bfff;
+  border: 1px solid var(--input-border);
   border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--text-color);
 }
 
 .modal-actions {
@@ -308,8 +329,8 @@
 
 .modal-actions button {
   padding: 8px 12px;
-  background: #9b5de5;
-  color: white;
+  background: var(--primary-color);
+  color: var(--button-text);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -317,7 +338,7 @@
 }
 
 .modal-actions button:hover {
-  background: #7a42d1;
+  background: var(--primary-hover);
 }
 
 /* ------------------------- ANIMATIONS ------------------------- */
@@ -341,12 +362,12 @@
 .filter-section {
   margin-top: 20px;
   padding: 10px;
-  border-top: 1px solid #e0d7ff;
+  border-top: 1px solid var(--sidebar-border);
 }
 
 .filter-section h4 {
   font-size: 14px;
-  color: #5f4b8b;
+  color: var(--text-color);
   margin-bottom: 5px;
 }
 
@@ -354,9 +375,10 @@
   width: 100%;
   padding: 6px;
   border-radius: 4px;
-  border: 1px solid #d3bfff;
+  border: 1px solid var(--input-border);
   font-size: 14px;
-  color: #5f4b8b;
+  color: var(--text-color);
+  background: var(--input-bg);
 }
 
 /* ------------------------- BACK BUTTON ------------------------- */
@@ -365,8 +387,8 @@
   align-items: center;
   gap: 5px;
   padding: 6px 12px;
-  background: #9b5de5;
-  color: white;
+  background: var(--primary-color);
+  color: var(--button-text);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -375,28 +397,28 @@
 }
 
 .back-btn:hover {
-  background: #7a42d1;
+  background: var(--primary-hover);
 }
 
 /* ------------------------- NEW MENU DROPDOWN ------------------------- */
 .new-menu {
   display: flex;
   flex-direction: column;
-  gap: 10px; /* Space between each menu item */
-  background: #ffffff;
-  border: 1px solid #e0d7ff;
+  gap: 10px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
   border-radius: 8px;
   padding: 10px;
-  box-shadow: 0 4px 8px rgba(155, 93, 229, 0.1);
+  box-shadow: 0 4px 8px var(--modal-shadow);
   margin-top: 10px;
   position: absolute;
   z-index: 100;
 }
 
 .new-menu-item button {
-  background: #faf5ff;
+  background: var(--section-bg);
   border: none;
-  color: #5f4b8b;
+  color: var(--text-color);
   font-weight: bold;
   padding: 10px 16px;
   text-align: left;
@@ -407,11 +429,10 @@
 }
 
 .new-menu-item button:hover {
-  background: #e6dbff;
+  background: var(--modal-bg);
 }
 
-
-/* DARK MODE SUPPORT */
+/* ------------------------- DARK MODE SUPPORT ------------------------- */
 body.dark {
   --bg-main: #1e1b23;
   --bg-sidebar: #2c2533;
@@ -488,7 +509,7 @@ body.dark .modal-close {
   color: var(--primary-color);
 }
 
-/* Theme toggle button container */
+/* ------------------------- THEME TOGGLE ------------------------- */
 .theme-toggle-container {
   margin-top: 40px;
   display: flex;
@@ -510,3 +531,63 @@ body.dark .modal-close {
 .theme-toggle-container button:hover {
   background: var(--primary-hover);
 }
+
+/* ------------------------- EXTRA UTILS FOR CLAMP/ELLIPSIS (optional to use in JSX) ------------------------- */
+.truncate {              /* ADDED utility class used in JSX */
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ------------------------- UPDATED CSS ------------------------- */
+
+/* Adjust layout for 448px x 844px screens */
+@media (width: 448px) and (height: 844px) {
+  .drive-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 10px;
+  }
+
+  /* Move the badge (logo and username) to the top of the screen */
+  .top-badge-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    background: var(--bg-color);
+  }
+
+  .top-badge-container img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+  }
+
+  .top-badge-container span {
+    font-weight: 600;
+    font-size: 14px;
+  }
+}
+
+/* Make the image smaller if required */
+.top-badge-container img {
+  width: 40px; /* Adjust size for compact view */
+  height: 40px;
+  object-fit: contain;
+}
+
+
+/* Tight match for 448x844 screens (portrait) */
+@media (width: 448px) and (height: 844px) {
+  .content { padding: 10px; }
+  .folder-card { padding: 10px; }
+  .section-title { font-size: 15px; }
+}
+
