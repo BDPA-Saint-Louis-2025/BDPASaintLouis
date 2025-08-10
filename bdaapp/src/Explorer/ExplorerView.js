@@ -1,14 +1,13 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-
 import { jwtDecode } from 'jwt-decode';
+
 import LockIcon from '@mui/icons-material/Lock';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import FolderIcon from '@mui/icons-material/Folder';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import UploadIcon from '@mui/icons-material/Upload';
 import HomeIcon from '@mui/icons-material/Home';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -16,33 +15,59 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import FileOptionsModal from './FileOptionsModal';
 import IconButton from '@mui/material/IconButton';
 import ShareIcon from '@mui/icons-material/Share';
 import LinkIcon from '@mui/icons-material/Link';
 import CreateIcon from '@mui/icons-material/Create';
-import FileUploadIcon from '@mui/icons-material/FileUpload';
-import myImage from '../LoginScreen/bdpaLogo.png'; // Ensure the path is correct
 import DownloadIcon from '@mui/icons-material/Download';
 
+import FileOptionsModal from './FileOptionsModal';
+import myImage from '../LoginScreen/bdpaLogo.png';
+
 import './ExplorerView.css';
+
+// ---------- Auth helpers ----------
+const getToken = () =>
+  localStorage.getItem('token') || sessionStorage.getItem('token');
+
+const authHeaders = (extra = {}) => {
+  const t = getToken();
+  return {
+    ...extra,
+    Authorization: `Bearer ${t || ''}`,
+    'x-auth-token': t || '',
+  };
+};
+
+const authFetch = (url, opts = {}) => {
+  const t = getToken();
+  if (!t) {
+    console.warn('[AUTH] No token; redirecting to login');
+    window.location.href = '/login';
+    return Promise.reject(new Error('NO_TOKEN'));
+  }
+  return fetch(url, {
+    ...opts,
+    headers: { ...(opts.headers || {}), ...authHeaders(opts.headers) },
+    // credentials: 'include', // uncomment if using cookie sessions
+  });
+};
+// ----------------------------------
 
 function ExplorerView() {
   const [files, setFiles] = useState([]);
   const [folders, setFolders] = useState([]);
   const [editingTags, setEditingTags] = useState({});
-
   const [currentFolderId, setCurrentFolderId] = useState(null);
   const [currentFolderName, setCurrentFolderName] = useState('My Drive');
+  const [activeSection, setActiveSection] = useState('home'); // 'home' | 'shared'
 
-  const [activeSection, setActiveSection] = useState('home');
   const [showNewMenu, setShowNewMenu] = useState(false);
   const [newFileType, setNewFileType] = useState('file');
   const fileInputRef = React.useRef(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [tagInputs, setTagInputs] = useState({});
 
   const [filterType, setFilterType] = useState('all'); // all | file | folder
   const [sortOrder, setSortOrder] = useState('asc');   // asc | desc
@@ -74,40 +99,35 @@ function ExplorerView() {
   const [sortOption, setSortOption] = useState('name');
   const [tagInput, setTagInput] = useState('');
   const [username, setUsername] = useState('');
-
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
-
   const [compact, setCompact] = useState(false);
 
-useEffect(() => {
-  const mq = () => setCompact(window.innerWidth <= 480);
-  mq();
-  window.addEventListener('resize', mq);
-  return () => window.removeEventListener('resize', mq);
-}, []);
+  const { fileId } = useParams();
+  const navigate = useNavigate();
 
+  useEffect(() => {
+    const mq = () => setCompact(window.innerWidth <= 480);
+    mq();
+    window.addEventListener('resize', mq);
+    return () => window.removeEventListener('resize', mq);
+  }, []);
 
   const topRightBadgeStyle = {
-  position: 'fixed',
-  top: compact ? 'auto' : '10px',
-  bottom: compact ? '10px' : 'auto',
-  right: '10px',
-  left: 'auto',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '8px',
-  zIndex: 9999,
-  padding: compact ? '6px 10px' : undefined,
-  borderRadius: compact ? '12px' : undefined,
-  background: compact ? 'rgba(0,0,0,0.25)' : undefined
-};
-
-
-  const imageStyle = {
-    width: '50px',
-    height: '50px',
-    objectFit: 'contain',
+    position: 'fixed',
+    top: compact ? 'auto' : '10px',
+    bottom: compact ? '10px' : 'auto',
+    right: '10px',
+    left: 'auto',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    zIndex: 9999,
+    padding: compact ? '6px 10px' : undefined,
+    borderRadius: compact ? '12px' : undefined,
+    background: compact ? 'rgba(0,0,0,0.25)' : undefined
   };
+
+  const imageStyle = { width: '50px', height: '50px', objectFit: 'contain' };
 
   useEffect(() => {
     const u = localStorage.getItem('username') || sessionStorage.getItem('username');
@@ -119,38 +139,37 @@ useEffect(() => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-  };
+  const toggleTheme = () => setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
 
-  const { fileId } = useParams();
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const token = getToken();
   const decoded = token ? jwtDecode(token) : {};
+  const myUserId =
+    decoded?.id || decoded?._id || decoded?.userId || decoded?.sub || null;
+  const myUsername =
+    decoded?.username || decoded?.name || decoded?.email?.split('@')[0] || '';
 
   useEffect(() => {
     const storedTheme = localStorage.getItem('theme') || 'light';
     document.body.classList.toggle('dark', storedTheme === 'dark');
   }, []);
 
+  // guard on mount if no token
+  useEffect(() => {
+    if (!getToken()) navigate('/login');
+  }, [navigate]);
+
   // Debounced search
   useEffect(() => {
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    console.log("Saved token:", token); // This must not be null
-
     const handler = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
   const openFileOptions = (node) => {
-    console.log('[OPTIONS CLICKED]', node);
     setSelectedNode(node);
     setShowPrivacyModal(true);
   };
-  const navigate = useNavigate();
 
-  const handleEditFile = (fileId) => {
-    navigate(`/editor/${fileId}`);
-  };
+  const handleEditFile = (fileId) => navigate(`/editor/${fileId}`);
 
   const closePrivacyModal = () => {
     setSelectedNode(null);
@@ -162,17 +181,13 @@ useEffect(() => {
     if (!newTag) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/files/${fileId}/tags`, {
+      const res = await authFetch(`http://localhost:5000/api/files/${fileId}/tags`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token") || sessionStorage.getItem("token")}`
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tags: [newTag] })
       });
 
       if (!res.ok) throw new Error("Failed to update tags");
-
       const data = await res.json();
       console.log("Tag added:", data.tags);
       alert("Tag added: " + newTag);
@@ -182,52 +197,76 @@ useEffect(() => {
     }
   };
 
- const fetchFiles = async (folderId, section) => {
-  let url = `http://localhost:5000/api/files/myfiles?filter=${filter}&sort=${sortOption}&order=${sortOrder}`;
-
-  if (folderId) {
-    url = `http://localhost:5000/api/files/folder/${folderId}?sort=${sortOption}&order=${sortOrder}`;
-  }
-
-  try {
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      const folders = data.filter(item => item.type === 'folder');
-      const files = data.filter(item => item.type === 'file');
-      setFolders(folders);
-      setFiles(files);
-
-      // Call fetchFolderItemCounts to update folder item counts
-      fetchFolderItemCounts(folders); 
-    } else {
-      console.error('Failed to fetch files/folders');
+  // -------- LOADERS --------
+  const fetchFiles = async (folderId, section) => {
+    let url = `http://localhost:5000/api/files/myfiles?filter=${filter}&sort=${sortOption}&order=${sortOrder}`;
+    if (folderId) {
+      url = `http://localhost:5000/api/files/folder/${folderId}?sort=${sortOption}&order=${sortOrder}`;
     }
-  } catch (err) {
-    console.error(err);
-  }
-};
 
+    try {
+      const res = await authFetch(url);
+      if (res.ok) {
+        const data = await res.json();
 
+        // If we're at ROOT of "My Drive", keep only items I own (avoid shared/public leakage)
+        const filtered = !folderId
+          ? data.filter(i =>
+              `${i.owner}` === `${myUserId}` ||
+              `${i.owner?._id}` === `${myUserId}`
+            )
+          : data;
 
+        const foldersOnly = filtered.filter(item => item.type === 'folder');
+        const filesOnly   = filtered.filter(item => item.type === 'file');
 
+        setFolders(foldersOnly);
+        setFiles(filesOnly);
+        setCurrentFolderName('My Drive');
+        fetchFolderItemCounts(foldersOnly);
+      } else {
+        console.error('Failed to fetch files/folders');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
+  const fetchSharedFiles = async () => {
+    try {
+      const res = await authFetch('http://localhost:5000/api/files/shared');
+      const data = await res.json();
+      // backend may return [] or { files: [...] }
+      const items = Array.isArray(data) ? data : (data.files || []);
+
+      // Keep only truly shared items (not owned by me), if your backend includes owner field
+      const onlyShared = items.filter(i =>
+        `${i.owner}` !== `${myUserId}` && `${i.owner?._id}` !== `${myUserId}`
+      );
+
+      const foldersOnly = onlyShared.filter(i => i.type === 'folder');
+      const filesOnly   = onlyShared.filter(i => i.type === 'file');
+
+      setFolders(foldersOnly);
+      setFiles(filesOnly);
+      setCurrentFolderId(null);
+      setCurrentFolderName('Shared with me');
+      fetchFolderItemCounts(foldersOnly);
+    } catch (err) {
+      console.error('[FETCH SHARED ERROR]', err);
+    }
+  };
+  // -------------------------
 
   const saveFileEdits = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/files/${fileId}`, {
+      const res = await authFetch(`http://localhost:5000/api/files/${fileId}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content: fileContent,
-          tags: updatedTags, // optional
-          name: newFileName  // optional
+          tags: updatedTags,
+          name: newFileName
         }),
       });
 
@@ -244,24 +283,23 @@ useEffect(() => {
 
   const togglePublicAccess = async (id, makePublic) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/files/${id}/permissions`, {
+      const res = await authFetch(`http://localhost:5000/api/files/${id}/permissions`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isPublic: makePublic })
       });
 
       const data = await res.json();
-
       if (res.ok) {
-        await fetchFiles(currentFolderId, activeSection); // Refresh view
+        if (activeSection === 'shared') {
+          await fetchSharedFiles();
+        } else {
+          await fetchFiles(currentFolderId, activeSection);
+        }
         closePrivacyModal();
-
         if (makePublic && data.publicLinkId) {
           const publicUrl = `http://localhost:5000/api/files/public/${data.publicLinkId}`;
-          console.log('Public link:', publicUrl); // or show modal with it
+          console.log('Public link:', publicUrl);
         }
       } else {
         console.error('[PERMISSION ERROR]', data);
@@ -272,35 +310,25 @@ useEffect(() => {
   };
 
   const handleCreate = async (type) => {
-    const name = prompt(`Enter ${type} name:`); // inline prompt
+    const name = prompt(`Enter ${type} name:`);
     if (!name) return;
 
-    const body = {
-      name,
-      type,
-      parent: currentFolderId || null
-    };
-
-    if (type === 'file') {
-      body.content = '';
-      body.tags = [];
-    }
+    const body = { name, type, parent: currentFolderId || null };
+    if (type === 'file') { body.content = ''; body.tags = []; }
 
     try {
-      const res = await fetch('http://localhost:5000/api/files/create', {
+      const res = await authFetch('http://localhost:5000/api/files/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
 
       if (res.ok) {
-        setActiveSection('home'); // or whatever updates your UI
+        setActiveSection('home');
         await fetchFiles(currentFolderId, 'home');
       } else {
-        alert('Failed to create file/folder');
+        const err = await res.json().catch(() => ({}));
+        alert(err?.message || 'Failed to create file/folder');
       }
     } catch (err) {
       console.error(err);
@@ -312,9 +340,7 @@ useEffect(() => {
     const counts = {};
     for (const folder of folderList) {
       try {
-        const res = await fetch(`http://localhost:5000/api/files/folder/${folder._id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await authFetch(`http://localhost:5000/api/files/folder/${folder._id}`);
         const folderData = await res.json();
         counts[folder._id] = folderData.files ? folderData.files.length : 0;
       } catch {
@@ -324,34 +350,67 @@ useEffect(() => {
     setFolderItemCounts(counts);
   };
 
+  // Choose loader based on activeSection
   useEffect(() => {
-    fetchFiles(currentFolderId, activeSection);
+    if (activeSection === 'shared') {
+      fetchSharedFiles();
+    } else {
+      fetchFiles(currentFolderId, activeSection);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSection, currentFolderId]);
 
   const handleFileUpload = async (file) => {
-    console.log("Uploading file to /api/files/upload");
-
     if (!file) return;
+
+    const t = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (!t) { alert('Please log in again.'); return; }
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('parent', currentFolderId || '');
 
-    try {
-      const res = await fetch('http://localhost:5000/api/files/upload', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData
-      });
+    // Try 1: Bearer + x-auth-token
+    const try1 = await fetch('http://localhost:5000/api/files/upload', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${t}`,
+        'x-auth-token': t,
+      },
+    });
 
-      if (res.ok) {
-        await fetchFiles(currentFolderId, activeSection);
-      } else {
-        alert('Upload failed');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Upload error');
+    if (try1.ok) {
+      if (activeSection === 'shared') await fetchSharedFiles();
+      else await fetchFiles(currentFolderId, activeSection);
+      return;
     }
+    if (try1.status !== 401) {
+      const err = await try1.json().catch(() => ({}));
+      alert(err?.message || 'Upload failed');
+      return;
+    }
+
+    // Try 2: token-only headers
+    const try2 = await fetch('http://localhost:5000/api/files/upload', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        Authorization: t,
+        'auth-token': t,
+      },
+    });
+
+    if (try2.ok) {
+      if (activeSection === 'shared') await fetchSharedFiles();
+      else await fetchFiles(currentFolderId, activeSection);
+      return;
+    }
+
+    const msg1 = await try1.text().catch(() => '');
+    const msg2 = await try2.text().catch(() => '');
+    console.error('[UPLOAD 401] first:', msg1, ' second:', msg2);
+    alert('Upload unauthorized. Check auth header format on the server.');
   };
 
   const handleCreateFolder = async () => {
@@ -359,12 +418,9 @@ useEffect(() => {
     if (!name) return;
 
     try {
-      const res = await fetch('http://localhost:5000/api/files', {
+      const res = await authFetch('http://localhost:5000/api/files', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
           type: 'folder',
@@ -374,9 +430,11 @@ useEffect(() => {
       });
 
       if (res.ok) {
-        await fetchFiles(currentFolderId, activeSection);
+        if (activeSection === 'shared') await fetchSharedFiles();
+        else await fetchFiles(currentFolderId, activeSection);
       } else {
-        alert('Failed to create folder');
+        const err = await res.json().catch(() => ({}));
+        alert(err?.message || 'Failed to create folder');
       }
     } catch (err) {
       console.error('[CREATE FOLDER ERROR]', err);
@@ -385,26 +443,18 @@ useEffect(() => {
   };
 
   const handleDownload = async (fileId) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    console.log('Download token:', token); // TEMP: Check if token is valid
-
-    if (!token) {
-      alert("You're not logged in. Please log in again.");
-      return;
-    };
+    const t = getToken();
+    if (!t) { alert("You're not logged in. Please log in again."); return; }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/files/download/${fileId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
+      const res = await authFetch(`http://localhost:5000/api/files/download/${fileId}`);
       if (!res.ok) throw new Error('Download failed');
 
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'downloaded_file'; // Optional: can be `file.name` if passed
+      link.download = 'downloaded_file';
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -416,16 +466,10 @@ useEffect(() => {
 
   const shareItem = async (itemId) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/files/${itemId}/permissions`, {
+      const res = await authFetch(`http://localhost:5000/api/files/${itemId}/permissions`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          targetEmail: shareEmail,  // FIXED: this now matches what backend expects
-          accessType
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetEmail: shareEmail, accessType })
       });
 
       if (res.ok) {
@@ -433,9 +477,9 @@ useEffect(() => {
         setShowShareModal(false);
         setShareEmail('');
       } else {
-        const error = await res.json();
+        const error = await res.json().catch(() => ({}));
         console.error('[SHARE ERROR]', error);
-        alert(error.error || 'Failed to share');
+        alert(error.error || error.message || 'Failed to share');
       }
     } catch (err) {
       console.error('[SHARE ERROR]', err);
@@ -445,11 +489,8 @@ useEffect(() => {
 
   const generateShareableLink = async (itemId) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/files/${itemId}/generate-link`, {
+      const res = await authFetch(`http://localhost:5000/api/files/${itemId}/generate-link`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
       });
 
       const data = await res.json();
@@ -465,29 +506,19 @@ useEffect(() => {
     }
   };
 
-  const token1 = localStorage.getItem('token') || sessionStorage.getItem('token');
-
-  console.log("Saved token:", token1); // This must not be null
-  console.log('[TOKEN USED FOR DELETE]', token1);
-
   const handleDelete = async (itemId) => {
-    console.log('[DELETE ATTEMPT] Deleting ID:', itemId);
-
     if (!window.confirm('Are you sure you want to delete this item?')) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/files/${itemId}`, {
+      const res = await authFetch(`http://localhost:5000/api/files/${itemId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token1}`
-        }
       });
 
       if (res.ok) {
-        console.log('[DELETE SUCCESS]');
-        fetchFiles(currentFolderId, activeSection);
+        if (activeSection === 'shared') await fetchSharedFiles();
+        else fetchFiles(currentFolderId, activeSection);
       } else {
-        const error = await res.json();
+        const error = await res.json().catch(() => ({}));
         console.error('[DELETE ERROR]', error);
       }
     } catch (err) {
@@ -497,10 +528,7 @@ useEffect(() => {
 
   const previewFile = async (file) => {
     try {
-      const res = await fetch(
-        `http://localhost:5000/api/files/${file._id}/preview`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await authFetch(`http://localhost:5000/api/files/${file._id}/preview`);
       if (!res.ok) throw new Error('Preview failed');
       const data = await res.json();
       alert(`Preview of ${file.name}:\n\n${data.content}`);
@@ -510,7 +538,7 @@ useEffect(() => {
     }
   };
 
-  // Apply filters & sorting
+  // Filters & sorting
   const displayedFolders = useMemo(() => {
     let list = folders;
     if (filterType !== 'file') {
@@ -520,12 +548,10 @@ useEffect(() => {
     } else {
       return [];
     }
-
     list.sort((a, b) => sortOrder === 'asc'
       ? a.name.localeCompare(b.name)
       : b.name.localeCompare(a.name)
     );
-
     return list;
   }, [folders, debouncedSearchTerm, filterType, sortOrder]);
 
@@ -538,12 +564,10 @@ useEffect(() => {
     } else {
       return [];
     }
-
     list.sort((a, b) => sortOrder === 'asc'
       ? a.name.localeCompare(b.name)
       : b.name.localeCompare(a.name)
     );
-
     return list;
   }, [files, debouncedSearchTerm, filterType, sortOrder]);
 
@@ -555,18 +579,16 @@ useEffect(() => {
   return (
     <div className="drive-layout">
       {compact ? (
-  <div className="top-badge-container">
-    <span>{username || 'User'} is Logged</span>
-    <img src={myImage} alt="Top Right Icon" />
-  </div>
-) : (
-  <div style={topRightBadgeStyle}>
-    <span style={{ fontWeight: 600 }}>{username || 'User'} is Logged</span>
-    <img src={myImage} alt="Top Right Icon" style={imageStyle} />
-  </div>
-)}
-
-
+        <div className="top-badge-container">
+          <span>{username || 'User'} is Logged</span>
+          <img src={myImage} alt="Top Right Icon" />
+        </div>
+      ) : (
+        <div style={topRightBadgeStyle}>
+          <span style={{ fontWeight: 600 }}>{username || 'User'} is Logged</span>
+          <img src={myImage} alt="Top Right Icon" style={imageStyle} />
+        </div>
+      )}
 
       {/* SIDEBAR */}
       <aside className="sidebar">
@@ -600,7 +622,6 @@ useEffect(() => {
           <button className={activeSection === 'home' ? 'active' : ''} onClick={() => { setCurrentFolderId(null); setActiveSection('home'); }}>
             <HomeIcon /> My Drive
           </button>
-
           <button className={activeSection === 'shared' ? 'active' : ''} onClick={() => { setCurrentFolderId(null); setActiveSection('shared'); }}>
             <PeopleAltIcon /> Shared with me
           </button>
@@ -622,7 +643,6 @@ useEffect(() => {
           </select>
         </div>
 
-        {/* Dashboard Link at bottom */}
         <div className="sidebar-footer">
           <button onClick={() => window.location.href = '/dashboard'}>
             <DashboardIcon /> Dashboard
@@ -668,19 +688,15 @@ useEffect(() => {
                     className="folder-card fade-in"
                     onDoubleClick={() => setCurrentFolderId(folder._id)}
                   >
-                    <div className="left"> {/* ADDED: truncation-friendly container */}
+                    <div className="left">
                       <FolderIcon style={{ fontSize: 28, color: '#c084fc' }} />
-                      <div
-                        className="folder-name truncate"   // ADDED
-                        title={folder.name}                 // ADDED
-                      >
+                      <div className="folder-name truncate" title={folder.name}>
                         {folder.name}
                       </div>
                     </div>
                     <div className="right">
                       <div className="file-actions">
                         <span className="item-count">{folderItemCounts[folder._id] || 0} items</span>
-
                         <button onClick={() => openFileOptions(folder)} title="Options">
                           <VisibilityIcon />
                         </button>
@@ -716,12 +732,9 @@ useEffect(() => {
                     className="folder-card fade-in"
                     onDoubleClick={() => previewFile(file)}
                   >
-                    <div className="left"> {/* ADDED: truncation-friendly container */}
+                    <div className="left">
                       <InsertDriveFileIcon style={{ fontSize: 28, color: '#9b5de5' }} />
-                      <div
-                        className="folder-name truncate"  // ADDED
-                        title={file.name}                 // ADDED
-                      >
+                      <div className="folder-name truncate" title={file.name}>
                         {file.name}
                       </div>
                     </div>
@@ -747,10 +760,10 @@ useEffect(() => {
 
                         <DownloadIcon onClick={() => handleDownload(file._id)} />
 
-                        <LocalOfferIcon onClick={() => updateTags(file._id, tagInputs[file._id])} />
+                        <LocalOfferIcon onClick={() => updateTags(file._id)} />
 
                         {file.tags && file.tags.length > 0 && (
-                          <div className="tag-container"> {/* ADDED */}
+                          <div className="tag-container">
                             {file.tags.map((tag, index) => (
                               <span className="tag" key={index}>{tag}</span>
                             ))}
@@ -807,7 +820,7 @@ useEffect(() => {
               type="text"
               placeholder="Enter user ID or email"
               value={shareEmail}
-              onChange={(e) =>setShareEmail(e.target.value.trim().toLowerCase())}
+              onChange={(e) => setShareEmail(e.target.value.trim().toLowerCase())}
             />
             <select value={accessType} onChange={(e) => setAccessType(e.target.value)}>
               <option value="view">View</option>
