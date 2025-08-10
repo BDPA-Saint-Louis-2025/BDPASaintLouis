@@ -1,5 +1,5 @@
 import React from 'react';
-import myImage from '../bdpabanner/bdpaLogo.png'; // Make sure the path is correct
+import myImage from '../bdpabanner/bdpaLogo.png'; // Ensure the extension is included
 
 const TopRightImage = () => {
   const imageStyle = {

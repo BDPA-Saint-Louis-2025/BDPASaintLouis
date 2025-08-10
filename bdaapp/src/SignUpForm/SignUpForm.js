@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './SignUpForm.css';
 import { useNavigate, Link } from 'react-router-dom';
-import myImage from '../LoginScreen/bdpaLogo.png'; // Ensure the path is correct
+import myImage from '../LoginScreen/bdpaLogo.png'; // Adjust path as needed
 
 const SignUpForm = () => {
   const [username, setUsername] = useState('');
@@ -10,8 +10,10 @@ const SignUpForm = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const [showPopup, setShowPopup] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+
+  const navigate = useNavigate();
 
   const imageStyle = {
     position: 'fixed',
@@ -33,7 +35,7 @@ const SignUpForm = () => {
 
   const passwordStrength = (pw) => {
     const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(pw);
-    const isAlphanumeric = /^[\w\-]+$/.test(pw); // alphanumeric with - and _
+    const isAlphanumeric = /^[\w\-]+$/.test(pw); // allows letters, numbers, _ and -
     if (pw.length < 11 || !hasSpecial || !isAlphanumeric) return 'weak';
     if (pw.length >= 17) return 'strong';
     return 'moderate';
@@ -65,6 +67,7 @@ const SignUpForm = () => {
         setError(data.message || "Something went wrong");
       } else {
         setSuccess("Registered successfully!");
+        navigate("/explorer");
         setError('');
       }
     } catch (err) {
@@ -119,18 +122,20 @@ const SignUpForm = () => {
                 required
               />
             </div>
+
             {error && <p style={{ color: 'red', fontSize: '14px' }}>{error}</p>}
             {success && <p style={{ color: 'green', fontSize: '14px' }}>{success}</p>}
+
             <button type="submit">Sign Up</button>
           </form>
 
           <p className="or-separator">OR</p>
 
-          <Link to="public-explorer" className="guest-btn">
+          <Link to="/public-explorer" className="guest-btn">
             Continue as Guest
           </Link>
 
-          <div className="theme-login-row">
+          <div className="login-theme-row">
             <p>
               Already have an account?{' '}
               <Link to="/login" className="link-option">Log In</Link>
@@ -140,13 +145,9 @@ const SignUpForm = () => {
             </button>
           </div>
         </div>
-
-        <div className="right-column">
-          {/* Optional image or promo */}
-        </div>
       </div>
 
-      {/* Password Popup Modal */}
+      {/* Password strength popup */}
       {showPopup && (
         <div className="popup-overlay">
           <div className="popup-content">
@@ -157,14 +158,14 @@ const SignUpForm = () => {
               <li>Must be alphanumeric (dashes and underscores allowed).</li>
               <li>Password must include special characters.</li>
             </ul>
-            <button onClick={() => setShowPopup(false)} className="try-again-btn">Try Again</button>
+            <button onClick={() => setShowPopup(false)} className="try-again-btn">
+              Try Again
+            </button>
           </div>
         </div>
       )}
     </div>
   );
 };
-
-
 
 export default SignUpForm;
