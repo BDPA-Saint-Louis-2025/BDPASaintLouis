@@ -216,7 +216,7 @@ function ExplorerView() {
               `${i.owner?._id}` === `${myUserId}`
             )
           : data;
-
+ 
         const foldersOnly = filtered.filter(item => item.type === 'folder');
         const filesOnly   = filtered.filter(item => item.type === 'file');
 

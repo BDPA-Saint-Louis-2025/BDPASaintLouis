@@ -83,7 +83,7 @@
 .content {
   flex: 1;
   padding: 20px;
-  overflow-y: auto;
+  
   background: var(--section-bg);
   min-width: 0;           /* ADDED: critical for ellipsis inside */
   max-width: 100%;        /* ADDED */
