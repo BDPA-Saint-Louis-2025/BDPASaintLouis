@@ -9,6 +9,13 @@ const SignUpForm = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  const [captchaAnswer, setCaptchaAnswer] = useState('');
+  const [randomNum1, setRandomNum1] = useState(0);
+  const [randomNum2, setRandomNum2] = useState(0);
+  const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
+  const [showCaptcha, setShowCaptcha] = useState(false); // To toggle CAPTCHA modal
+  const [shakeCaptcha, setShakeCaptcha] = useState(false); // To control shake animation
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,6 +50,14 @@ const SignUpForm = () => {
     );
   };
 
+  // Generate two random numbers between 1 and 10 when the component loads
+  useEffect(() => {
+    const num1 = Math.floor(Math.random() * 10) + 1;
+    const num2 = Math.floor(Math.random() * 10) + 1;
+    setRandomNum1(num1);
+    setRandomNum2(num2);
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -66,6 +81,28 @@ const SignUpForm = () => {
       return;
     }
 
+    setShowCaptcha(true); // Show the CAPTCHA modal first
+  };
+
+  // Validate CAPTCHA and proceed with login if correct
+  const validateCaptcha = () => {
+    const sum = randomNum1 + randomNum2;
+    if (parseInt(captchaAnswer) === sum) {
+      setIsCaptchaVerified(true);
+      setShowCaptcha(false); // Hide CAPTCHA once verified
+      proceedWithSignUp();
+    } else {
+      setError('Incorrect CAPTCHA answer, please try again.');
+      setShakeCaptcha(true); // Trigger the shake animation
+      setTimeout(() => setShakeCaptcha(false), 500); // Stop shaking after a short duration
+    }
+  };
+
+  // Proceed with login after CAPTCHA is solved correctly
+  const proceedWithSignUp = async () => {
+    const u = username.trim();
+    const em = email.trim();
+    const pw = password;
     setIsSubmitting(true);
     try {
       const res = await fetch('http://localhost:5000/api/auth/register', {
@@ -188,6 +225,30 @@ const SignUpForm = () => {
             </button>
           </div>
         </div>
+
+        {/* CAPTCHA Modal */}
+        {showCaptcha && (
+          <div className="modal-overlay">
+            <div className={`modal-content ${shakeCaptcha ? 'shake' : ''}`}>
+              <div className="modal-header">
+                <h3>CAPTCHA</h3>
+              </div>
+              <p>What is {randomNum1} + {randomNum2}?</p>
+              <input
+                type="text"
+                value={captchaAnswer}
+                onChange={(e) => setCaptchaAnswer(e.target.value)}
+                placeholder="Enter the answer"
+              />
+              {error && <p style={{ color: 'red', fontSize: '14px' }}>{error}</p>}
+              <div className="modal-actions">
+                <button onClick={validateCaptcha} className="primary-btn">Verify</button>
+                <button className="cancel" onClick={() => setShowCaptcha(false)}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        )}
+        
       </div>
     </div>
   );
