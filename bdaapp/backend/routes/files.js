@@ -307,6 +307,19 @@ router.post('/:id/generate-link', authMiddleware, async (req, res) => {
   }
 });
 
+
+router.get('/public', async (req, res)=>{
+  try{
+    const files = await FileOrFolder.find({isPublic:true});
+    res.json({files})
+
+  }catch(err){
+    console.error("Failed cuz you suck");
+    res.status(500).json({message: "Failed"})
+  }
+
+
+})
 // PUBLIC BY LINK (binary)
 router.get('/public/:publicLinkId', async (req, res) => {
   try {
