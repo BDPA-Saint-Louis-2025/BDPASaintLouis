@@ -3,6 +3,8 @@ import QuestionCard from "../components/QuestionCard";
 import { searchQuestions } from "../api/questions";
 import myImage from '../LoginScreen/bdpaLogo.png';
 import './buffet.css';
+import { useNavigate, Link } from 'react-router-dom';
+
 
 
 // simple polling hook for Req.10 light revalidation
