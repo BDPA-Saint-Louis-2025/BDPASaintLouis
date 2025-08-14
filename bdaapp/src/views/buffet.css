@@ -52,3 +52,19 @@ float: left; }
     text-align: center; 
     padding: 10% 5%;
   }
+
+  aside {
+
+    float: left; 
+    width: 20vw; 
+    height: 100vh; 
+    margin: 20% 0 0 0;
+  }
+
+  .searchInput {
+
+border-radius: 20%; 
+box-shadow:10px 10px 10px rgba(0, 0, 0, 0.5); 
+border: none; 
+
+  }

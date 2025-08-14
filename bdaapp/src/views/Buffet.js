@@ -101,10 +101,10 @@ export default function Buffet() {
             </ul>
             </div>
              <h1 className="heading">Buffet</h1>
-        <div className="flex flex-wrap gap-2">
+        <div className="body">
     
           <input
-            className="border rounded px-3 py-2 w-64"
+            className="searchInput"
             placeholder="Search…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
