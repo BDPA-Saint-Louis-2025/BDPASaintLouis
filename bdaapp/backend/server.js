@@ -1,3 +1,4 @@
+const configRoutes = require("./routes/config");
 
 const path = require("path");
 require("dotenv").config({ path: path.resolve(__dirname, ".env") });
@@ -23,3 +24,5 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/files", require("./routes/files"));
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+const configRoutes = require("./routes/config");
