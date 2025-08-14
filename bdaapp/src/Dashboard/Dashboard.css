@@ -228,7 +228,7 @@ input[type="text"], input[type="email"], input[type="password"] {
   border: 1px solid var(--sidebar-border);
 }
 .password-strength.weak { opacity: 0.7; }
-.password-strength.moderate {}
+.password-strength.moderate {opacity: 1;}
 .password-strength.strong { border-color: var(--primary-color); }
 
 /* ===== Responsive ===== */
@@ -251,7 +251,8 @@ input[type="text"], input[type="email"], input[type="password"] {
     flex-direction: row;
     align-items: center;
     gap: 8px;
-    overflow-x: auto;               /* allow horizontal scroll for many buttons */
+    overflow-x: auto;
+    overflow-y: auto;               /* allow horizontal scroll for many buttons */
     padding-right: calc(12px + env(safe-area-inset-right));
     padding-left: calc(12px + env(safe-area-inset-left));
   }
@@ -281,3 +282,4 @@ input[type="text"], input[type="email"], input[type="password"] {
 @media (max-width: 360px) {
   .nav button, .sidebar-footer button { font-size: 0.9rem; }
 }
+

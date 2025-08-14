@@ -591,3 +591,42 @@ body.dark .modal-close {
   .section-title { font-size: 15px; }
 }
 
+.barTwo {
+  
+    background: var(--primary-color);
+    position: fixed;
+     height: 10vh;  
+     z-Index: 9998;
+     border-radius: 25px;
+     text-align: center;
+     padding: 0 5%;
+     transform: translateX(400px);
+     
+
+}
+.imgStyle {
+
+  filter: drop-shadow(5px 5px 10px rgba(0, 0, 0, 0.5));
+  z-index: 9999;
+  width: 5vw;
+  height: 5vh;
+  transform: translateY(2px);
+
+}
+  ul {
+
+    list-style-type: none; 
+    color: #fff; 
+    overflow: hidden; 
+    vertical-align: middle; 
+  
+
+  }
+
+  li {
+
+
+
+    display: inline-block; 
+    margin: 1% 5%;
+  }

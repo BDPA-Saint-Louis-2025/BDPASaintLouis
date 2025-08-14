@@ -141,8 +141,18 @@ const SignUpForm = () => {
 
   return (
     <div className="page-container">
-      <img src={myImage} alt="Top Right Icon" style={imageStyle} />
 
+    <div className="bar">
+            <img src={myImage} alt="Top Right Icon" className='imgStyle'/>
+    <ul>
+    <Link to="/login" style={{color: '#fff'}}><li>Login </li> </Link>
+   <Link to="/signup" style={{color: '#fff'}}> <li> Sign Up</li> </Link> 
+    <Link to="/explorer" style={{color: '#fff'}}><li> File Explorer</li> </Link>
+
+    </ul>
+
+
+    </div>
       <h1 className="header1">Create an Account</h1>
 
       <div className="signup-container" style={{ position: 'relative', zIndex: 1 }}>

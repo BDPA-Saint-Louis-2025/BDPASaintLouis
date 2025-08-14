@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import './ExplorerView.css';
+
 
 import LockIcon from '@mui/icons-material/Lock';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
@@ -24,7 +26,6 @@ import DownloadIcon from '@mui/icons-material/Download';
 import FileOptionsModal from './FileOptionsModal';
 import myImage from '../LoginScreen/bdpaLogo.png';
 
-import './ExplorerView.css';
 
 // ---------- Auth helpers ----------
 const getToken = () =>
@@ -577,18 +578,24 @@ function ExplorerView() {
   };
 
   return (
+    
     <div className="drive-layout">
-      {compact ? (
-        <div className="top-badge-container">
-          <span>{username || 'User'} is Logged</span>
-          <img src={myImage} alt="Top Right Icon" />
-        </div>
-      ) : (
-        <div style={topRightBadgeStyle}>
-          <span style={{ fontWeight: 600 }}>{username || 'User'} is Logged</span>
-          <img src={myImage} alt="Top Right Icon" style={imageStyle} />
-        </div>
-      )}
+          
+            <div className="barTwo">
+                <ul>
+               <img src={myImage} alt="Top Right Icon" className='imgStyle'/>
+                  
+                <Link to="/login" style={{color: '#fff'}}><li>Login </li> </Link>
+               <Link to="/signup" style={{color: '#fff'}}> <li> Sign Up</li> </Link> 
+                <Link to="/explorer" style={{color: '#fff'}}><li className="block"> File Explorer</li> </Link>
+                <span>{username || 'User'} is Logged</span>
+                </ul>
+        
+   
+            
+            
+                </div>
+    
 
       {/* SIDEBAR */}
       <aside className="sidebar">

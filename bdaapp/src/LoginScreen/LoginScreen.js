@@ -85,6 +85,18 @@ function LoginScreen() {
 
   return (
     <div className="page-container">
+
+      <div className="bar">
+                  <img src={myImage} alt="Top Right Icon" className='imgStyle'/>
+          <ul>
+          <Link to="/login" style={{color: '#fff'}}><li>Login </li> </Link>
+         <Link to="/signup" style={{color: '#fff'}}> <li> Sign Up</li> </Link> 
+          <Link to="/explorer" style={{color: '#fff'}}><li> File Explorer</li> </Link>
+      
+          </ul>
+      
+      
+          </div>
       <h1 className="header1">Welcome Back!</h1>
       <div className="signup-container">
         <div className="left-column">
