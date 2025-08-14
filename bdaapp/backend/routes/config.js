@@ -1,9 +1,7 @@
-// backend/routes/config.js
-const express = require("express");
-const router = express.Router();
+import dotenv from "dotenv";
+dotenv.config();
 
-router.get("/api-key", (req, res) => {
-  res.json({ key: process.env.QO_API_KEY });
-});
-
-module.exports = router;
+app.get("/api-ke", (req, res) => {
+  // .env at project root: VITE_QO_API_KEY=bearer your-real-key-here
+  res.json({ key: process.env.VITE_QO_API_KEY });
+}); 
