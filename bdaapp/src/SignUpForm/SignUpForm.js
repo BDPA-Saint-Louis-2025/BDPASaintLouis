@@ -214,13 +214,13 @@ const SignUpForm = () => {
               {isSubmitting ? 'Signing Up…' : 'Sign Up'}
             </button>
           </form>
-
+{/*
           <p className="or-separator">OR</p>
 
           <Link to="/public-explorer" className="guest-btn" style={{ position: 'relative', zIndex: 1 }}>
             Continue as Guest
           </Link>
-
+*/}
           <div className="login-theme-row">
             <p>
               Already have an account?{' '}

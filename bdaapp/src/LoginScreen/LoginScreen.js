@@ -1,103 +1,78 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import './LoginScreen.css';
-import myImage from '../LoginScreen/bdpaLogo.png';
+// src/LoginScreen/LoginScreen.jsx
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import "./LoginScreen.css";
+import myImage from "../LoginScreen/bdpaLogo.png";
+import { authenticate } from "../api/auth";
 
 function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState(""); // <-- username instead of email
+  const [password, setPassword] = useState("");
   const [isChecked, setIsChecked] = useState(false);
-  const [error, setError] = useState('');
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
-  const [captchaAnswer, setCaptchaAnswer] = useState('');
+  const [error, setError] = useState("");
+  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
   const [randomNum1, setRandomNum1] = useState(0);
   const [randomNum2, setRandomNum2] = useState(0);
-  const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
-  const [showCaptcha, setShowCaptcha] = useState(false); // To toggle CAPTCHA modal
-  const [shakeCaptcha, setShakeCaptcha] = useState(false); // To control shake animation
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  const [shakeCaptcha, setShakeCaptcha] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.body.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('theme', theme);
+    document.body.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
   }, [theme]);
 
-  // Generate two random numbers between 1 and 10 when the component loads
   useEffect(() => {
-    const num1 = Math.floor(Math.random() * 10) + 1;
-    const num2 = Math.floor(Math.random() * 10) + 1;
-    setRandomNum1(num1);
-    setRandomNum2(num2);
+    setRandomNum1(Math.floor(Math.random() * 10) + 1);
+    setRandomNum2(Math.floor(Math.random() * 10) + 1);
   }, []);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-  };
+  const toggleTheme = () => setTheme((t) => (t === "light" ? "dark" : "light"));
+  const handleOnChange = () => setIsChecked((v) => !v);
 
-  const handleOnChange = () => setIsChecked(!isChecked);
+  const handleLogin = () => setShowCaptcha(true);
 
-  // Show the CAPTCHA modal when the login button is clicked
-  const handleLogin = async () => {
-    setShowCaptcha(true); // Show the CAPTCHA modal first
-  };
-
-  // Validate CAPTCHA and proceed with login if correct
-  const validateCaptcha = () => {
+  const validateCaptcha = async () => {
     const sum = randomNum1 + randomNum2;
-    if (parseInt(captchaAnswer) === sum) {
-      setIsCaptchaVerified(true);
-      setShowCaptcha(false); // Hide CAPTCHA once verified
-      proceedWithLogin();
-    } else {
-      setError('Incorrect CAPTCHA answer, please try again.');
-      setShakeCaptcha(true); // Trigger the shake animation
-      setTimeout(() => setShakeCaptcha(false), 500); // Stop shaking after a short duration
+    if (parseInt(captchaAnswer) !== sum) {
+      setError("Incorrect CAPTCHA answer, please try again.");
+      setShakeCaptcha(true);
+      setTimeout(() => setShakeCaptcha(false), 500);
+      return;
     }
-  };
-
-  // Proceed with login after CAPTCHA is solved correctly
-  const proceedWithLogin = async () => {
+    setShowCaptcha(false);
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Invalid login");
-        return;
-      }
-
-      const storage = isChecked ? localStorage : sessionStorage;
-      storage.setItem("token", data.token);
-      storage.setItem("username", data.user.username);
-
-      alert(`Welcome back, ${data.user.username}!`);
-      navigate("/BuffetView");
-    } catch (err) {
-      console.error(err);
-      setError("Network error");
+      setError("");
+      await authenticate({ username, password, remember: isChecked });
+      alert(`Welcome back, ${username}!`);
+      navigate("/"); // go to Buffet
+    } catch (e) {
+      setError(e.message || "Invalid login");
     }
   };
 
   return (
     <div className="page-container">
-    
       <h1 className="header1">Welcome Back!</h1>
       <div className="signup-container">
         <div className="left-column">
-          <form className="form" onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
+          <form
+            className="form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleLogin();
+            }}
+          >
             <div className="inputs">
               <input
                 className="input"
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
+                autoComplete="username"
               />
             </div>
             <div className="inputs">
@@ -108,72 +83,75 @@ function LoginScreen() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="current-password"
               />
             </div>
 
             <div className="options-row">
               <label className="option-item">
-                <input
-                  type="checkbox"
-                  checked={isChecked}
-                  onChange={handleOnChange}
-                />
+                <input type="checkbox" checked={isChecked} onChange={handleOnChange} />
                 Remember Me
               </label>
             </div>
 
-            <p style={{ marginTop: '10px', fontSize: '14px' }}>
-              <Link to="/forgot-password" style={{ color: '#007bff', textDecoration: 'underline' }}>
+            <p style={{ marginTop: "10px", fontSize: "14px" }}>
+              <Link to="/forgot-password" style={{ color: "#007bff", textDecoration: "underline" }}>
                 Forgot your password?
               </Link>
             </p>
 
-            {error && <p style={{ color: 'red', fontSize: '14px' }}>{error}</p>}
-
+            {error && <p style={{ color: "red", fontSize: "14px" }}>{error}</p>}
             <button type="submit">Login</button>
           </form>
 
-          <p className="or-separator">OR</p>
-
-          <Link to="/public-explorer" className="guest-btn">Continue as Guest</Link>
-
           <div className="login-theme-row">
             <p>
-              Don’t have an account?{' '}
-              <Link to="/signup" className="link-option">Sign Up</Link>
+              Don’t have an account? <Link to="/signup" className="link-option">Sign Up</Link>
             </p>
             <button className="primary-btn" onClick={toggleTheme}>
-              Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode
+              Switch to {theme === "light" ? "Dark" : "Light"} Mode
             </button>
-                <div className="bar">
-            <img src={myImage} alt="Top Right Icon" className="imgStyle" />
-            <ul>
-            <Link to='/signup' style={{color: '#fff'}}><li> Sign Up </li></Link>
-            <Link to='/login' style={{color: '#fff'}}><li>Login</li></Link>
-            <Link to='/' style={{color: '#fff'}}><li> Question Viewer</li></Link>
-            </ul>
+
+            <div className="bar">
+              <img src={myImage} alt="Top Right Icon" className="imgStyle" />
+              <ul>
+                <Link to="/signup" style={{ color: "#fff" }}>
+                  <li> Sign Up </li>
+                </Link>
+                <Link to="/login" style={{ color: "#fff" }}>
+                  <li>Login</li>
+                </Link>
+                <Link to="/" style={{ color: "#fff" }}>
+                  <li> Question Viewer</li>
+                </Link>
+              </ul>
             </div>
           </div>
         </div>
 
-        {/* CAPTCHA Modal */}
         {showCaptcha && (
           <div className="modal-overlay">
-            <div className={`modal-content ${shakeCaptcha ? 'shake' : ''}`}>
+            <div className={`modal-content ${shakeCaptcha ? "shake" : ""}`}>
               <div className="modal-header">
                 <h3>CAPTCHA</h3>
               </div>
-              <p>What is {randomNum1} + {randomNum2}?</p>
+              <p>
+                What is {randomNum1} + {randomNum2}?
+              </p>
               <input
                 type="text"
                 value={captchaAnswer}
                 onChange={(e) => setCaptchaAnswer(e.target.value)}
                 placeholder="Enter the answer"
               />
-              {error && <p style={{ color: 'red', fontSize: '14px' }}>{error}</p>}
+              {error && <p style={{ color: "red", fontSize: "14px" }}>{error}</p>}
               <div className="modal-actions">
-                <button onClick={validateCaptcha} className="primary-btn">Verify</button>
-                <button className="cancel" onClick={() => setShowCaptcha(false)}>Cancel</button>
+                <button onClick={validateCaptcha} className="primary-btn">
+                  Verify
+                </button>
+                <button className="cancel" onClick={() => setShowCaptcha(false)}>
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
