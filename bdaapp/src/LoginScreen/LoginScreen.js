@@ -150,7 +150,7 @@ function LoginScreen() {
             <ul>
             <Link to='/signup' style={{color: '#fff'}}><li> Sign Up </li></Link>
             <Link to='/login' style={{color: '#fff'}}><li>Login</li></Link>
-            <Link to='/BuffetView' style={{color: '#fff'}}><li> Question Viewer</li></Link>
+            <Link to='/' style={{color: '#fff'}}><li> Question Viewer</li></Link>
             </ul>
             </div>
           </div>

@@ -97,11 +97,11 @@ export default function Buffet() {
             <ul>
             <Link to='/signup' style={{color: '#fff'}}><li> Sign Up </li></Link>
             <Link to='/login' style={{color: '#fff'}}><li>Login</li></Link>
-            <Link to='/BuffetView' style={{color: '#fff'}}><li> Question Viewer</li></Link>
+            <Link to='/' style={{color: '#fff'}}><li> Question Viewer</li></Link>
             </ul>
             </div>
              <h1 className="heading">Buffet</h1>
-        <div className="body">
+        <div className="searchFilters">
     
           <input
             className="searchInput"
@@ -109,8 +109,9 @@ export default function Buffet() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
+          <div className="filters">
           <select
-            className="border rounded px-3 py-2"
+            className="subInput"
             value={mode}
             onChange={(e) => setMode(e.target.value)}
             title="Search mode"
@@ -122,16 +123,17 @@ export default function Buffet() {
           </select>
 
           <select
-            className="border rounded px-3 py-2"
             value={sort}
             onChange={(e) => setSort(e.target.value)}
             title="Sort"
+            className="subInput"
           >
             {SORTS.map((s) => (
               <option key={s.key} value={s.key}>{s.label}</option>
             ))}
           </select>
-
+          </div>
+          </div>
           <button
             className="border rounded px-3 py-2"
             onClick={() => fetchPage({ append: false, cursor: null })}
@@ -140,9 +142,8 @@ export default function Buffet() {
           >
             Refresh
           </button>
-        </div>
+      
       </header>
-
       {error && (
         <div className="bg-red-50 text-red-700 border border-red-200 rounded p-3 mb-3">
           {error}
@@ -165,5 +166,6 @@ export default function Buffet() {
         </button>
       </div>
     </div>
+    
   );
 }
