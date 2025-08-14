@@ -67,7 +67,8 @@ border-radius: 25px;
 box-shadow:10px 10px 10px rgba(0, 0, 0, 0.5); 
 border: none; 
 display: block; 
-margin: auto; 
+margin: auto;
+width: 20vw; 
   }
 
   .searchFilters {
@@ -84,9 +85,11 @@ margin: auto;
 
   .Filters {
     display: block; 
-    width: 50%;
+    width: 50vw; 
     overflow: hidden; 
     border: none; 
+    max-width:15vw;
+    min-width: 10vw;
 
   }
 
@@ -96,5 +99,16 @@ margin: auto;
     border: none; 
     border-radius: 25px;
     box-shadow:10px 10px 10px rgba(0, 0, 0, 0.2); 
+    margin: 0 20%;
+
+  }
+
+  .selecter {
+
+ border: none; 
+    border-radius: 25px;
+    box-shadow:10px 10px 10px rgba(0, 0, 0, 0.2); 
+    width: 15vw; 
+
 
   }

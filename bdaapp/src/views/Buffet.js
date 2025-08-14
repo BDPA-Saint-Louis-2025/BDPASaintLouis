@@ -126,7 +126,8 @@ export default function Buffet() {
             value={sort}
             onChange={(e) => setSort(e.target.value)}
             title="Sort"
-            className="subInput"
+            className="selecter"
+            
           >
             {SORTS.map((s) => (
               <option key={s.key} value={s.key}>{s.label}</option>
