@@ -242,6 +242,31 @@ button:hover {
   margin: 0;
   font-size: 16px;
 }
+.bar {
+  
+    background: var(--primary-color);
+    position: fixed;
+    top: 10px;
+     width:50%;  
+     height: 10vh;  
+     z-Index: 9998;
+     border-radius: 25px;
+     text-align: center;
+     padding: 0 5%;
+     left: 20%;
+     
+     
+
+}
+.imgStyle {
+
+  filter: drop-shadow(5px 5px 10px rgba(0, 0, 0, 0.2));
+  z-index: 9999;
+  width: 5vw;
+  height: 5vh;
+  vertical-align: center;
+  transform: translateY(15px);
+float: left; }
 
 
 /* Emmanuelabadmus05** */

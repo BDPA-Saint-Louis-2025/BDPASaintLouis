@@ -148,6 +148,7 @@ function LoginScreen() {
             <div className="bar">
             <img src={myImage} alt="Top Right Icon" className="imgStyle" />
             <ul>
+            <li> Sign Up </li>
             <li> Login</li>
             <li> Question Viewer</li>
             </ul>
