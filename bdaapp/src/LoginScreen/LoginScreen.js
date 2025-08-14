@@ -145,12 +145,12 @@ function LoginScreen() {
             <button className="primary-btn" onClick={toggleTheme}>
               Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode
             </button>
-            <div className="bar">
+                <div className="bar">
             <img src={myImage} alt="Top Right Icon" className="imgStyle" />
             <ul>
-            <li> Sign Up </li>
-            <li> Login</li>
-            <li> Question Viewer</li>
+            <Link to='/signup' style={{color: '#fff'}}><li> Sign Up </li></Link>
+            <Link to='/login' style={{color: '#fff'}}><li>Login</li></Link>
+            <Link to='/BuffetView' style={{color: '#fff'}}><li> Question Viewer</li></Link>
             </ul>
             </div>
           </div>
