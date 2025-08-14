@@ -8,11 +8,10 @@ import SignUpForm from './SignUpForm/SignUpForm';
 export default function App() {
   return (
     <BrowserRouter>
-
       <Routes>
-             <Route path="/login" element={<LoginScreen />} />
+        <Route path="/login" element={<LoginScreen />} />
         <Route path="/signup" element={<SignUpForm />} />
-        <Route path="/BuffetView" element={<Buffet />} />
+        <Route path="/" element={<Buffet />} />
         {/* Q&A, Mail, Dashboard, Auth will come later */}
       </Routes>
     </BrowserRouter>
