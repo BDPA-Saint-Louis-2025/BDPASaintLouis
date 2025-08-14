@@ -1,6 +1,9 @@
 import React from "react";
 import QuestionCard from "../components/QuestionCard";
 import { searchQuestions } from "../api/questions";
+import myImage from '../LoginScreen/bdpaLogo.png';
+import './buffet.css';
+
 
 // simple polling hook for Req.10 light revalidation
 function useInterval(callback, delay) {
@@ -84,10 +87,20 @@ export default function Buffet() {
   }
 
   return (
+    
     <div className="max-w-5xl mx-auto p-4">
       <header className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between mb-4">
-        <h1 className="text-2xl font-bold">Buffet</h1>
+          <div className="bar">
+            <img src={myImage} alt="Top Right Icon" className="imgStyle" />
+            <ul>
+            <li> Sign Up </li>
+            <li> Login</li>
+            <li> Question Viewer</li>
+            </ul>
+            </div>
+             <h1 className="heading">Buffet</h1>
         <div className="flex flex-wrap gap-2">
+    
           <input
             className="border rounded px-3 py-2 w-64"
             placeholder="Search…"
