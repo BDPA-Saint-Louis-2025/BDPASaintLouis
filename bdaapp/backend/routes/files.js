@@ -263,6 +263,34 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req, res) =
   }
 });
 
+// UPDATE (file content or metadata)
+router.put('/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const { content, name, tags } = req.body;
+
+  try {
+    const me = userIdOf(req);
+    const file = await FileOrFolder.findOne({ _id: id, owner: me });
+
+    if (!file) return res.status(404).json({ message: 'File not found' });
+    if (file.type !== 'file') return res.status(400).json({ message: 'Can only update files' });
+
+    if (typeof content === 'string') {
+      file.content = content;
+      file.size = Buffer.byteLength(content, 'utf8');
+    }
+    if (name) file.name = name;
+    if (tags && Array.isArray(tags)) file.tags = tags.slice(0, 5);
+
+    await file.save();
+    res.status(200).json(file);
+  } catch (err) {
+    console.error('[UPDATE ERROR]', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 // DOWNLOAD
 router.get('/download/:id', authMiddleware, async (req, res) => {
   try {
