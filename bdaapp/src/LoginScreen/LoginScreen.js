@@ -76,7 +76,7 @@ function LoginScreen() {
       storage.setItem("username", data.user.username);
 
       alert(`Welcome back, ${data.user.username}!`);
-      navigate("/explorer");
+      navigate("/BuffetView");
     } catch (err) {
       console.error(err);
       setError("Network error");
@@ -85,6 +85,7 @@ function LoginScreen() {
 
   return (
     <div className="page-container">
+    
       <h1 className="header1">Welcome Back!</h1>
       <div className="signup-container">
         <div className="left-column">
@@ -144,7 +145,13 @@ function LoginScreen() {
             <button className="primary-btn" onClick={toggleTheme}>
               Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode
             </button>
-            <img src={myImage} alt="Top Right Icon" style={{ position: 'fixed', top: '10px', right: '10px', width: '50px', height: '50px', zIndex: 9999 }} />
+            <div className="bar">
+            <img src={myImage} alt="Top Right Icon" className="imgStyle" />
+            <ul>
+            <li> Login</li>
+            <li> Question Viewer</li>
+            </ul>
+            </div>
           </div>
         </div>
 
