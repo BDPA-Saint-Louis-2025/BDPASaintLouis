@@ -11,7 +11,7 @@ const fileOrFolderSchema = new mongoose.Schema({
   uploadPath: { type: String },
   nameOnDisk: { type: String },
   mimeType: { type: String, default: 'application/octet-stream' },
-  isPublic: { type: Boolean, default: false },
+  isPublic: { type: Boolean, default: true },
   lock: {
     user: { type: String, default: null },
     client: { type: String, default: null },
